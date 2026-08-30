@@ -5,7 +5,7 @@ agent can both read and edit — live, on the same page. Entry for
 **[The WebMCP Challenge](https://webmcp.devpost.com/)** (deadline 3 September
 2026, 1pm PDT).
 
-**Live demo:** _add the deployed URL here after publishing_
+**Live demo:** https://s-papy.github.io/cash-pipeline-webmcp/
 **Video:** _add the YouTube link here_
 
 ## Why WebMCP is a strong fit
