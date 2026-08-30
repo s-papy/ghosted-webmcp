@@ -1,0 +1,685 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Cash Pipeline — track opportunities with your agent</title>
+<meta name="description" content="A shared board of grants, hackathons and freelance leads that you and your AI agent can both read and edit — built for the WebMCP Challenge.">
+<meta name="license" content="MIT">
+<style>
+  :root {
+    --bg: #0b0d12;
+    --card: #151822;
+    --border: #262b38;
+    --text: #e8eaf0;
+    --muted: #8b92a5;
+    --green: #34d399;
+    --red: #f87171;
+    --yellow: #fbbf24;
+    --accent: #818cf8;
+  }
+  * { box-sizing: border-box; }
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
+    margin: 0;
+    padding: 0 0 60px 0;
+  }
+  header {
+    padding: 32px 24px 16px;
+    max-width: 1000px;
+    margin: 0 auto;
+  }
+  header h1 { margin: 0 0 6px 0; font-size: 26px; }
+  header p { color: var(--muted); margin: 0; font-size: 14px; line-height: 1.5; max-width: 640px; }
+  main { max-width: 1000px; margin: 0 auto; padding: 0 24px; }
+
+  .toolbar {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+    margin: 20px 0;
+  }
+  .toolbar select, .toolbar input[type="text"] {
+    background: var(--card);
+    border: 1px solid var(--border);
+    color: var(--text);
+    border-radius: 8px;
+    padding: 8px 10px;
+    font-size: 13px;
+  }
+  .toolbar button {
+    background: var(--accent);
+    color: #0b0d12;
+    border: none;
+    border-radius: 8px;
+    padding: 8px 14px;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+  }
+  .toolbar button.secondary {
+    background: transparent;
+    color: var(--text);
+    border: 1px solid var(--border);
+  }
+
+  .summary-cards {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: 12px;
+    margin: 16px 0 24px;
+  }
+  .summary-cards .card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 14px 16px;
+  }
+  .summary-cards .label { color: var(--muted); font-size: 11px; text-transform: uppercase; letter-spacing: .04em; }
+  .summary-cards .value { font-size: 22px; font-weight: 600; margin-top: 4px; }
+
+  table { width: 100%; border-collapse: collapse; margin-bottom: 24px; }
+  th, td { text-align: left; padding: 10px 8px; border-bottom: 1px solid var(--border); font-size: 13px; vertical-align: top; }
+  th { color: var(--muted); font-weight: 500; font-size: 11px; text-transform: uppercase; letter-spacing: .04em; }
+  td.name a { color: var(--text); text-decoration: none; border-bottom: 1px dotted var(--muted); }
+  td.notes { color: var(--muted); max-width: 220px; }
+
+  .badge { display: inline-block; padding: 3px 9px; border-radius: 999px; font-size: 11px; font-weight: 600; }
+  .badge-spotted { background: rgba(139,146,165,.18); color: var(--muted); }
+  .badge-in_progress { background: rgba(129,140,248,.18); color: var(--accent); }
+  .badge-submitted { background: rgba(251,191,36,.18); color: var(--yellow); }
+  .badge-won { background: rgba(52,211,153,.18); color: var(--green); }
+  .badge-rejected { background: rgba(248,113,113,.18); color: var(--red); }
+
+  .deadline-urgent { color: var(--red); font-weight: 600; }
+  .deadline-soon { color: var(--yellow); }
+  .deadline-none { color: var(--muted); }
+
+  .row-actions button {
+    background: transparent;
+    border: 1px solid var(--border);
+    color: var(--muted);
+    border-radius: 6px;
+    padding: 3px 8px;
+    font-size: 11px;
+    cursor: pointer;
+    margin-right: 4px;
+  }
+  .row-actions button:hover { color: var(--text); border-color: var(--accent); }
+
+  dialog {
+    background: var(--card);
+    color: var(--text);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 20px;
+    width: min(480px, 92vw);
+  }
+  dialog::backdrop { background: rgba(0,0,0,.6); }
+  dialog h2 { margin-top: 0; font-size: 16px; }
+  dialog label { display: block; font-size: 12px; color: var(--muted); margin: 10px 0 4px; }
+  dialog input, dialog select, dialog textarea {
+    width: 100%;
+    background: #0f1219;
+    border: 1px solid var(--border);
+    color: var(--text);
+    border-radius: 8px;
+    padding: 8px 10px;
+    font-size: 13px;
+    font-family: inherit;
+  }
+  dialog textarea { resize: vertical; min-height: 50px; }
+  dialog .dialog-actions { display: flex; justify-content: flex-end; gap: 8px; margin-top: 16px; }
+  dialog .dialog-actions button { padding: 7px 14px; border-radius: 8px; font-size: 13px; cursor: pointer; }
+  dialog .dialog-actions button[value="cancel"] { background: transparent; border: 1px solid var(--border); color: var(--text); }
+  dialog .dialog-actions button[value="save"] { background: var(--accent); border: none; color: #0b0d12; font-weight: 600; }
+
+  #empty-state { color: var(--muted); font-size: 14px; padding: 30px 0; text-align: center; }
+
+  .agent-note {
+    margin-top: 40px;
+    padding: 14px 16px;
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    font-size: 12px;
+    color: var(--muted);
+    line-height: 1.6;
+  }
+  .agent-note code { color: var(--accent); }
+  footer {
+    max-width: 1000px;
+    margin: 40px auto 0;
+    padding: 0 24px;
+    color: var(--muted);
+    font-size: 12px;
+  }
+  footer a { color: var(--muted); }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>💸 Cash Pipeline</h1>
+  <p>
+    A board of grants, hackathons and freelance leads you can edit by hand — or hand to your
+    agent. Everything you see here is also exposed as
+    <a href="https://developer.chrome.com/docs/ai/webmcp" style="color:inherit">WebMCP</a>
+    tools: an agent in the same tab can add a lead it just found, mark one submitted, or read
+    back your nearest deadlines, and you watch it happen on this page rather than take its
+    word for it.
+  </p>
+</header>
+
+<main>
+  <div class="summary-cards" id="summary-cards"></div>
+
+  <div class="toolbar">
+    <button id="btn-add">+ Add opportunity</button>
+    <select id="filter-status">
+      <option value="">All statuses</option>
+      <option value="spotted">Spotted</option>
+      <option value="in_progress">In progress</option>
+      <option value="submitted">Submitted</option>
+      <option value="won">Won</option>
+      <option value="rejected">Rejected</option>
+    </select>
+    <select id="filter-type">
+      <option value="">All types</option>
+      <option value="grant">Grant</option>
+      <option value="hackathon">Hackathon</option>
+      <option value="freelance">Freelance</option>
+      <option value="other">Other</option>
+    </select>
+    <input type="text" id="filter-search" placeholder="Search name or notes…">
+    <button class="secondary" id="btn-seed">Load example data</button>
+    <button class="secondary" id="btn-clear">Clear all</button>
+  </div>
+
+  <table>
+    <thead>
+      <tr>
+        <th>Name</th>
+        <th>Type</th>
+        <th>Deadline</th>
+        <th>Amount</th>
+        <th>Status</th>
+        <th>Notes</th>
+        <th></th>
+      </tr>
+    </thead>
+    <tbody id="rows"></tbody>
+  </table>
+  <div id="empty-state" style="display:none;">No opportunities yet. Add one, or ask your agent to.</div>
+
+  <div class="agent-note">
+    This page registers WebMCP tools when your browser supports them (Chrome with
+    <code>chrome://flags/#enable-webmcp-testing</code> enabled, or ChatGPT's in-app browser):
+    <code>add_opportunity</code>, <code>update_status</code>, <code>remove_opportunity</code>,
+    <code>get_deadlines</code>, <code>get_pipeline_summary</code>, <code>search_opportunities</code>.
+    All data lives only in this browser's local storage — nothing is sent anywhere.
+  </div>
+</main>
+
+<footer>
+  MIT licensed. Built for <a href="https://webmcp.devpost.com">The WebMCP Challenge</a>.
+</footer>
+
+<dialog id="dialog-edit">
+  <form method="dialog" id="form-edit">
+    <h2 id="dialog-title">Add opportunity</h2>
+    <input type="hidden" id="f-id">
+    <label for="f-name">Name</label>
+    <input type="text" id="f-name" required placeholder="e.g. Manifund AI Safety Regranting">
+    <label for="f-url">Link</label>
+    <input type="text" id="f-url" placeholder="https://…">
+    <label for="f-type">Type</label>
+    <select id="f-type">
+      <option value="grant">Grant</option>
+      <option value="hackathon">Hackathon</option>
+      <option value="freelance">Freelance</option>
+      <option value="other">Other</option>
+    </select>
+    <label for="f-deadline">Deadline</label>
+    <input type="date" id="f-deadline">
+    <label for="f-amount">Amount (optional, numeric)</label>
+    <input type="text" id="f-amount" placeholder="e.g. 5000">
+    <label for="f-status">Status</label>
+    <select id="f-status">
+      <option value="spotted">Spotted</option>
+      <option value="in_progress">In progress</option>
+      <option value="submitted">Submitted</option>
+      <option value="won">Won</option>
+      <option value="rejected">Rejected</option>
+    </select>
+    <label for="f-notes">Notes</label>
+    <textarea id="f-notes" placeholder="Anything worth remembering"></textarea>
+    <div class="dialog-actions">
+      <button value="cancel">Cancel</button>
+      <button value="save" id="btn-save">Save</button>
+    </div>
+  </form>
+</dialog>
+
+<script>
+// ---------------------------------------------------------------------------
+// Cash Pipeline — WebMCP Challenge entry.
+//
+// Everything lives in localStorage under STORAGE_KEY. Two things read and
+// write that same store: the human UI below (table + dialog), and the WebMCP
+// tools further down. Neither is a special case of the other — both call the
+// same load()/save()/render() functions, which is the whole point of the
+// challenge brief ("an app that becomes meaningfully better when people and
+// their agents can use it together"): whichever one acts, the other sees the
+// result immediately, on the same page.
+// ---------------------------------------------------------------------------
+
+const STORAGE_KEY = 'cash-pipeline-v1';
+const STATUSES = ['spotted', 'in_progress', 'submitted', 'won', 'rejected'];
+
+function load() {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    const parsed = raw ? JSON.parse(raw) : [];
+    return Array.isArray(parsed) ? parsed : [];
+  } catch (e) {
+    console.warn('Cash Pipeline: could not read localStorage, starting empty.', e);
+    return [];
+  }
+}
+
+function save(items) {
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(items));
+}
+
+function uid() {
+  return 'op_' + Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
+}
+
+function daysUntil(dateStr) {
+  if (!dateStr) return null;
+  const target = new Date(dateStr + 'T23:59:59');
+  if (isNaN(target.getTime())) return null;
+  const now = new Date();
+  return Math.ceil((target - now) / 86400000);
+}
+
+function escapeHtml(s) {
+  return String(s == null ? '' : s).replace(/[&<>"']/g, (c) => ({
+    '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;',
+  }[c]));
+}
+
+// ---------------------------------------------------------------------------
+// Rendering — the single source of truth both the human UI and the WebMCP
+// tools funnel through after every mutation.
+// ---------------------------------------------------------------------------
+
+function render() {
+  const items = load();
+  renderSummary(items);
+  renderRows(items);
+}
+
+function renderSummary(items) {
+  const el = document.getElementById('summary-cards');
+  const byStatus = {};
+  for (const s of STATUSES) byStatus[s] = 0;
+  let totalOpenAmount = 0;
+  let nearest = null;
+  for (const it of items) {
+    if (byStatus[it.status] !== undefined) byStatus[it.status]++;
+    const amt = Number(it.amount);
+    if (!isNaN(amt) && it.status !== 'rejected' && it.status !== 'won') totalOpenAmount += amt;
+    const d = daysUntil(it.deadline);
+    if (d !== null && (it.status === 'spotted' || it.status === 'in_progress')) {
+      if (nearest === null || d < nearest.days) nearest = { days: d, name: it.name };
+    }
+  }
+  const cards = [
+    { label: 'Open leads', value: byStatus.spotted + byStatus.in_progress },
+    { label: 'Submitted', value: byStatus.submitted },
+    { label: 'Won', value: byStatus.won },
+    { label: 'Potential cash (open)', value: totalOpenAmount ? totalOpenAmount.toLocaleString() : '—' },
+    { label: 'Nearest deadline', value: nearest ? `${nearest.days}d — ${nearest.name}` : '—' },
+  ];
+  el.innerHTML = cards.map((c) => `
+    <div class="card">
+      <div class="label">${escapeHtml(c.label)}</div>
+      <div class="value">${escapeHtml(String(c.value))}</div>
+    </div>`).join('');
+}
+
+function renderRows(allItems) {
+  const statusFilter = document.getElementById('filter-status').value;
+  const typeFilter = document.getElementById('filter-type').value;
+  const search = document.getElementById('filter-search').value.trim().toLowerCase();
+
+  let items = allItems.slice().sort((a, b) => {
+    const da = daysUntil(a.deadline), db = daysUntil(b.deadline);
+    if (da === null && db === null) return 0;
+    if (da === null) return 1;
+    if (db === null) return -1;
+    return da - db;
+  });
+
+  if (statusFilter) items = items.filter((i) => i.status === statusFilter);
+  if (typeFilter) items = items.filter((i) => i.type === typeFilter);
+  if (search) items = items.filter((i) =>
+    (i.name || '').toLowerCase().includes(search) ||
+    (i.notes || '').toLowerCase().includes(search));
+
+  const tbody = document.getElementById('rows');
+  const emptyState = document.getElementById('empty-state');
+
+  if (items.length === 0) {
+    tbody.innerHTML = '';
+    emptyState.style.display = 'block';
+    return;
+  }
+  emptyState.style.display = 'none';
+
+  tbody.innerHTML = items.map((it) => {
+    const d = daysUntil(it.deadline);
+    let deadlineHtml = '<span class="deadline-none">—</span>';
+    if (d !== null) {
+      const cls = d < 0 ? 'deadline-urgent' : d <= 3 ? 'deadline-urgent' : d <= 7 ? 'deadline-soon' : '';
+      const label = d < 0 ? `overdue by ${-d}d` : d === 0 ? 'today' : `in ${d}d`;
+      deadlineHtml = `<span class="${cls}">${escapeHtml(it.deadline)} (${label})</span>`;
+    }
+    const nameHtml = it.url
+      ? `<a href="${escapeHtml(it.url)}" target="_blank" rel="noopener">${escapeHtml(it.name)}</a>`
+      : escapeHtml(it.name);
+    return `
+      <tr data-id="${escapeHtml(it.id)}">
+        <td class="name">${nameHtml}</td>
+        <td>${escapeHtml(it.type || 'other')}</td>
+        <td>${deadlineHtml}</td>
+        <td>${it.amount ? escapeHtml(String(it.amount)) : '—'}</td>
+        <td><span class="badge badge-${escapeHtml(it.status)}">${escapeHtml((it.status || '').replace('_', ' '))}</span></td>
+        <td class="notes">${escapeHtml(it.notes || '')}</td>
+        <td class="row-actions">
+          <button data-action="edit">Edit</button>
+          <button data-action="delete">Delete</button>
+        </td>
+      </tr>`;
+  }).join('');
+}
+
+// ---------------------------------------------------------------------------
+// Human UI — dialog, filters, seed/clear buttons.
+// ---------------------------------------------------------------------------
+
+const dialog = document.getElementById('dialog-edit');
+const form = document.getElementById('form-edit');
+
+function openDialogFor(item) {
+  document.getElementById('dialog-title').textContent = item ? 'Edit opportunity' : 'Add opportunity';
+  document.getElementById('f-id').value = item ? item.id : '';
+  document.getElementById('f-name').value = item ? item.name || '' : '';
+  document.getElementById('f-url').value = item ? item.url || '' : '';
+  document.getElementById('f-type').value = item ? item.type || 'grant' : 'grant';
+  document.getElementById('f-deadline').value = item ? item.deadline || '' : '';
+  document.getElementById('f-amount').value = item ? item.amount || '' : '';
+  document.getElementById('f-status').value = item ? item.status || 'spotted' : 'spotted';
+  document.getElementById('f-notes').value = item ? item.notes || '' : '';
+  dialog.showModal();
+}
+
+document.getElementById('btn-add').addEventListener('click', () => openDialogFor(null));
+
+document.getElementById('rows').addEventListener('click', (e) => {
+  const btn = e.target.closest('button[data-action]');
+  if (!btn) return;
+  const tr = btn.closest('tr');
+  const id = tr.getAttribute('data-id');
+  const items = load();
+  const item = items.find((i) => i.id === id);
+  if (btn.dataset.action === 'edit') {
+    openDialogFor(item);
+  } else if (btn.dataset.action === 'delete') {
+    save(items.filter((i) => i.id !== id));
+    render();
+  }
+});
+
+dialog.addEventListener('close', () => {
+  if (dialog.returnValue !== 'save') return;
+  const id = document.getElementById('f-id').value;
+  const items = load();
+  const record = {
+    id: id || uid(),
+    name: document.getElementById('f-name').value.trim(),
+    url: document.getElementById('f-url').value.trim(),
+    type: document.getElementById('f-type').value,
+    deadline: document.getElementById('f-deadline').value,
+    amount: document.getElementById('f-amount').value.trim(),
+    status: document.getElementById('f-status').value,
+    notes: document.getElementById('f-notes').value.trim(),
+  };
+  if (!record.name) return;
+  const idx = items.findIndex((i) => i.id === record.id);
+  if (idx >= 0) items[idx] = record; else items.push(record);
+  save(items);
+  render();
+});
+
+['filter-status', 'filter-type'].forEach((id) =>
+  document.getElementById(id).addEventListener('change', render));
+document.getElementById('filter-search').addEventListener('input', render);
+
+document.getElementById('btn-clear').addEventListener('click', () => {
+  if (!confirm('Delete all opportunities?')) return;
+  save([]);
+  render();
+});
+
+document.getElementById('btn-seed').addEventListener('click', () => {
+  const items = load();
+  const examples = [
+    { id: uid(), name: 'Manifund AI Safety Regranting', url: 'https://manifund.org', type: 'grant', deadline: '', amount: '20000', status: 'spotted', notes: 'Rolling, public proposal required.' },
+    { id: uid(), name: 'AssemblyAI Hackathon', url: 'https://lablab.ai/ai-hackathons/assemblyai-voice-agent-hackathon', type: 'hackathon', deadline: '2026-09-30', amount: '5000', status: 'spotted', notes: 'Voice agent, month-long build.' },
+    { id: uid(), name: 'DevNetwork API+Cloud+AI Hackathon', url: 'https://api-cloud-ai-hackathon-2026.devpost.com', type: 'hackathon', deadline: '2026-09-03', amount: '12500', status: 'in_progress', notes: 'Overall track, submitting existing project.' },
+  ];
+  save(items.concat(examples));
+  render();
+});
+
+// ---------------------------------------------------------------------------
+// WebMCP tools — the agent side of the same board.
+//
+// Deliberately NOT gated behind window/document existing in a special way:
+// this file has no test harness pretending to be a browser (unlike a page
+// that ships with its own node-based test suite), so a plain feature check
+// on `document.modelContext` is enough here. Every tool below calls the same
+// load()/save()/render() as the human UI, so an agent's action shows up on
+// screen immediately, and a human's edit is what the agent reads back next
+// time it calls a tool — one shared board, not two copies of the data.
+// ---------------------------------------------------------------------------
+
+function registerWebMcpTools() {
+  if (typeof document === 'undefined' || !document.modelContext || !document.modelContext.registerTool) {
+    return;
+  }
+
+  const statusEnum = STATUSES;
+  const typeEnum = ['grant', 'hackathon', 'freelance', 'other'];
+
+  document.modelContext.registerTool({
+    name: 'add_opportunity',
+    description: 'Add a new cash opportunity (grant, hackathon or freelance lead) to the board. Shows up immediately in the visible table.',
+    inputSchema: {
+      type: 'object',
+      properties: {
+        name: { type: 'string', description: 'Short name of the opportunity.' },
+        url: { type: 'string', description: 'Link to the opportunity, if any.' },
+        type: { type: 'string', enum: typeEnum },
+        deadline: { type: 'string', description: 'ISO date (YYYY-MM-DD) if there is a deadline. Omit if rolling / no deadline.' },
+        amount: { type: 'string', description: 'Numeric amount as a string, e.g. "5000". Omit if unknown.' },
+        status: { type: 'string', enum: statusEnum, description: 'Defaults to "spotted".' },
+        notes: { type: 'string' },
+      },
+      required: ['name'],
+    },
+    annotations: { readOnlyHint: false, untrustedContentHint: false },
+    execute: async (input) => {
+      const items = load();
+      const record = {
+        id: uid(),
+        name: String(input.name || '').trim(),
+        url: (input.url || '').trim(),
+        type: typeEnum.includes(input.type) ? input.type : 'other',
+        deadline: input.deadline || '',
+        amount: (input.amount || '').toString().trim(),
+        status: statusEnum.includes(input.status) ? input.status : 'spotted',
+        notes: input.notes || '',
+      };
+      if (!record.name) return 'Refused: an opportunity needs a name.';
+      items.push(record);
+      save(items);
+      render();
+      return `Added "${record.name}" (id ${record.id}, status ${record.status}).`;
+    },
+  });
+
+  document.modelContext.registerTool({
+    name: 'update_status',
+    description: 'Update the status of an existing opportunity, matched by id or by exact/partial name.',
+    inputSchema: {
+      type: 'object',
+      properties: {
+        id: { type: 'string' },
+        name: { type: 'string', description: 'Used if id is not provided; matches case-insensitively, partial match allowed.' },
+        status: { type: 'string', enum: statusEnum },
+      },
+      required: ['status'],
+    },
+    annotations: { readOnlyHint: false, untrustedContentHint: false },
+    execute: async ({ id, name, status }) => {
+      if (!statusEnum.includes(status)) return `Refused: status must be one of ${statusEnum.join(', ')}.`;
+      const items = load();
+      let item = id ? items.find((i) => i.id === id) : null;
+      if (!item && name) {
+        const q = name.toLowerCase();
+        item = items.find((i) => i.name.toLowerCase() === q) ||
+               items.find((i) => i.name.toLowerCase().includes(q));
+      }
+      if (!item) return `No matching opportunity found for ${id ? 'id ' + id : 'name "' + name + '"'}.`;
+      item.status = status;
+      save(items);
+      render();
+      return `"${item.name}" is now "${status}".`;
+    },
+  });
+
+  document.modelContext.registerTool({
+    name: 'remove_opportunity',
+    description: 'Remove an opportunity from the board, matched by id or by exact/partial name.',
+    inputSchema: {
+      type: 'object',
+      properties: {
+        id: { type: 'string' },
+        name: { type: 'string' },
+      },
+    },
+    annotations: { readOnlyHint: false, untrustedContentHint: false },
+    execute: async ({ id, name }) => {
+      const items = load();
+      let item = id ? items.find((i) => i.id === id) : null;
+      if (!item && name) {
+        const q = name.toLowerCase();
+        item = items.find((i) => i.name.toLowerCase().includes(q));
+      }
+      if (!item) return 'No matching opportunity found.';
+      save(items.filter((i) => i.id !== item.id));
+      render();
+      return `Removed "${item.name}".`;
+    },
+  });
+
+  document.modelContext.registerTool({
+    name: 'get_deadlines',
+    description: 'List open opportunities (status spotted or in_progress) sorted by nearest deadline first. Items with no deadline are listed last.',
+    inputSchema: { type: 'object', properties: {} },
+    annotations: { readOnlyHint: true, untrustedContentHint: false },
+    execute: async () => {
+      const items = load().filter((i) => i.status === 'spotted' || i.status === 'in_progress');
+      items.sort((a, b) => {
+        const da = daysUntil(a.deadline), db = daysUntil(b.deadline);
+        if (da === null && db === null) return 0;
+        if (da === null) return 1;
+        if (db === null) return -1;
+        return da - db;
+      });
+      return JSON.stringify(items.map((i) => ({
+        name: i.name, deadline: i.deadline || null,
+        days_left: daysUntil(i.deadline), status: i.status, type: i.type,
+      })));
+    },
+  });
+
+  document.modelContext.registerTool({
+    name: 'get_pipeline_summary',
+    description: 'Counts of opportunities by status, total potential cash still open (not won or rejected), and the single nearest deadline.',
+    inputSchema: { type: 'object', properties: {} },
+    annotations: { readOnlyHint: true, untrustedContentHint: false },
+    execute: async () => {
+      const items = load();
+      const byStatus = {};
+      for (const s of statusEnum) byStatus[s] = 0;
+      let totalOpenAmount = 0;
+      let nearest = null;
+      for (const it of items) {
+        if (byStatus[it.status] !== undefined) byStatus[it.status]++;
+        const amt = Number(it.amount);
+        if (!isNaN(amt) && it.status !== 'rejected' && it.status !== 'won') totalOpenAmount += amt;
+        const d = daysUntil(it.deadline);
+        if (d !== null && (it.status === 'spotted' || it.status === 'in_progress')) {
+          if (nearest === null || d < nearest.days) nearest = { days: d, name: it.name };
+        }
+      }
+      return JSON.stringify({ by_status: byStatus, total_open_amount: totalOpenAmount, nearest_deadline: nearest });
+    },
+  });
+
+  document.modelContext.registerTool({
+    name: 'search_opportunities',
+    description: 'Search opportunities by a text query against name and notes, optionally filtered by type or status.',
+    inputSchema: {
+      type: 'object',
+      properties: {
+        query: { type: 'string' },
+        type: { type: 'string', enum: typeEnum },
+        status: { type: 'string', enum: statusEnum },
+      },
+    },
+    annotations: { readOnlyHint: true, untrustedContentHint: false },
+    execute: async ({ query, type, status }) => {
+      let items = load();
+      if (type) items = items.filter((i) => i.type === type);
+      if (status) items = items.filter((i) => i.status === status);
+      if (query) {
+        const q = query.toLowerCase();
+        items = items.filter((i) =>
+          (i.name || '').toLowerCase().includes(q) ||
+          (i.notes || '').toLowerCase().includes(q));
+      }
+      return JSON.stringify(items);
+    },
+  });
+}
+
+render();
+registerWebMcpTools();
+
+// Keep the page in sync if data changes in another tab (e.g. the agent runs
+// in a second tab against the same origin).
+window.addEventListener('storage', (e) => {
+  if (e.key === STORAGE_KEY) render();
+});
+</script>
+
+</body>
+</html>
