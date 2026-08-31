@@ -76,7 +76,14 @@
     gap: 10px;
     margin-bottom: 16px;
     flex-wrap: wrap;
+    align-items: center;
   }
+  .toolbar .reset-btn {
+    margin-left: auto;
+    color: var(--muted);
+    font-size: 0.82rem;
+  }
+  .toolbar .reset-btn:hover { color: var(--text); background: var(--panel-2); }
   input[type="text"], select {
     background: var(--panel-2);
     border: 1px solid var(--border);
@@ -232,6 +239,7 @@
       <option value="paused">Paused</option>
       <option value="canceled">Canceled</option>
     </select>
+    <button id="resetBtn" class="reset-btn" title="Put every subscription back to its starting state">↺ Reset demo</button>
   </div>
 
   <div class="grid" id="grid"></div>
@@ -771,6 +779,15 @@
   document.getElementById("statusFilter").addEventListener("change", renderGrid);
   document.getElementById("overlay").addEventListener("click", function (e) {
     if (e.target.id === "overlay") closeMaze();
+  });
+  document.getElementById("resetBtn").addEventListener("click", function () {
+    var ok = window.confirm("Reset the demo? This clears every change (canceled, paused, log) and puts all subscriptions back to their starting state.");
+    if (!ok) return;
+    state = { subs: clone(SEED), log: [] };
+    save();
+    document.getElementById("searchInput").value = "";
+    document.getElementById("statusFilter").value = "";
+    render();
   });
 
   registerTools();
