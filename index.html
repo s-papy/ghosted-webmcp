@@ -851,7 +851,14 @@
 
   // ---------- freelance invoices: rendering ----------
 
-  function money(n) { return "$" + n.toFixed(2).replace(/\.00$/, ""); }
+  function money(n) {
+    var hasCents = Math.abs(Math.round(n * 100) % 100) !== 0;
+    return new Intl.NumberFormat("en-US", {
+      style: "currency", currency: "USD",
+      minimumFractionDigits: hasCents ? 2 : 0,
+      maximumFractionDigits: hasCents ? 2 : 0
+    }).format(n);
+  }
 
   function renderInvoices() {
     renderInvoiceSummary();
@@ -1117,9 +1124,9 @@
       paidAt: null
     };
     state.invoices.unshift(inv);
-    addInvoiceLog(who || "agent", "logged invoice to " + inv.client + " for $" + inv.amount + " (" + inv.project + ")", inv.id);
+    addInvoiceLog(who || "agent", "logged invoice to " + inv.client + " for " + money(inv.amount) + " (" + inv.project + ")", inv.id);
     save();
-    return { invoice: inv, message: "Logged $" + inv.amount + " invoice to " + inv.client + "." };
+    return { invoice: inv, message: "Logged " + money(inv.amount) + " invoice to " + inv.client + "." };
   }
 
   function getInvoice(args) { return findInvoice(args && args.id_or_client) || null; }
@@ -1174,7 +1181,7 @@
       flagged: names,
       count: targets.length,
       totalAmount: round1(totalGhosted),
-      message: "Flagged " + targets.length + " invoice(s) as ghosted (" + threshold + "+ days overdue): " + names.join(", ") + " — $" + round1(totalGhosted) + " owed."
+      message: "Flagged " + targets.length + " invoice(s) as ghosted (" + threshold + "+ days overdue): " + names.join(", ") + " — " + money(round1(totalGhosted)) + " owed."
     };
   }
 
