@@ -18,6 +18,8 @@
     --warning: #fab219;
     --serious: #ec835a;
     --critical: #e66767;
+    --cat-1: #3987e5; --cat-2: #d95926; --cat-3: #199e70;
+    --cat-4: #c98500; --cat-5: #d55181; --cat-6: #008300;
   }
   * { box-sizing: border-box; }
   body {
@@ -30,6 +32,27 @@
   .wrap { max-width: 960px; margin: 0 auto; padding: 32px 20px 80px; }
   header h1 { font-size: 1.9rem; margin: 0 0 6px; }
   header p.tagline { color: var(--muted); font-size: 1rem; max-width: 560px; margin: 0 0 18px; }
+
+  .digest {
+    background: linear-gradient(135deg, color-mix(in srgb, var(--link) 10%, var(--panel)), var(--panel));
+    border: 1px solid color-mix(in srgb, var(--link) 30%, var(--border));
+    border-radius: 14px;
+    padding: 16px 20px;
+    margin-bottom: 22px;
+  }
+  .digest .digest-title { font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.04em; color: var(--faint); margin-bottom: 10px; }
+  .digest .digest-empty { color: var(--muted); font-size: 0.88rem; }
+  .digest-row {
+    display: flex; align-items: center; gap: 10px;
+    padding: 8px 6px; border-radius: 8px; cursor: pointer;
+    font-size: 0.88rem;
+  }
+  .digest-row:hover { background: var(--panel-2); }
+  .digest-row .digest-icon { font-size: 1.1rem; flex-shrink: 0; }
+  .digest-row .digest-count {
+    margin-left: auto; font-weight: 700; font-variant-numeric: proportional-nums;
+    background: var(--panel-2); border-radius: 999px; padding: 2px 10px; font-size: 0.8rem;
+  }
 
   .tabs { display: flex; gap: 8px; margin-bottom: 20px; }
   .tab-btn {
@@ -149,14 +172,29 @@
   .card {
     background: var(--panel);
     border: 1px solid var(--border);
+    border-left: 3px solid var(--entity-color, var(--border));
     border-radius: 14px;
     padding: 16px 18px;
     display: flex;
     flex-direction: column;
     gap: 8px;
+    transition: transform 0.15s, box-shadow 0.15s;
   }
+  .card:hover { transform: translateY(-1px); box-shadow: 0 6px 18px rgba(0,0,0,0.35); }
   .card.dimmed { opacity: 0.55; }
+  .card.flash-update { animation: flashUpdate 1.6s ease-out; }
+  @keyframes flashUpdate {
+    0% { box-shadow: 0 0 0 2px var(--link), 0 0 24px color-mix(in srgb, var(--link) 55%, transparent); }
+    100% { box-shadow: none; }
+  }
   .card .row-top { display: flex; justify-content: space-between; align-items: flex-start; gap: 8px; }
+  .card .name-row { display: flex; align-items: center; gap: 8px; }
+  .card .entity-icon {
+    width: 30px; height: 30px; border-radius: 8px; flex-shrink: 0;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 0.9rem; font-weight: 700; color: #06111f;
+    background: var(--entity-color, var(--panel-2));
+  }
   .card .company { font-weight: 700; font-size: 1.05rem; }
   .card .role { color: var(--muted); font-size: 0.82rem; }
   .card .days { font-size: 0.78rem; color: var(--faint); white-space: nowrap; }
@@ -222,6 +260,8 @@
       <button class="tab-btn" id="tabInvoicesBtn">💰 Freelance invoices</button>
     </div>
   </header>
+
+  <div class="digest" id="digest"></div>
 
   <div id="jobsPanel">
     <div class="compare-row">
@@ -399,6 +439,21 @@
     return String(s).toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, "") || "app";
   }
 
+  // Deterministic identity color per company/client — fixed categorical
+  // slot order (dataviz-skill rule: never generate a new hue, cycle a fixed set),
+  // always paired with the name text, never carrying meaning by hue alone.
+  var CAT_COLORS = ["var(--cat-1)", "var(--cat-2)", "var(--cat-3)", "var(--cat-4)", "var(--cat-5)", "var(--cat-6)"];
+  function entityStyle(name) {
+    var h = 0;
+    for (var i = 0; i < name.length; i++) h = (h * 31 + name.charCodeAt(i)) >>> 0;
+    return { color: CAT_COLORS[h % CAT_COLORS.length], initial: (name.trim()[0] || "?").toUpperCase() };
+  }
+
+  // Track statuses between renders so we can flash only the card(s) that
+  // actually just changed, instead of re-flashing the whole grid every time.
+  var lastAppStatuses = {};
+  var lastInvoiceStatuses = {};
+
   function findInvoice(idOrClient) {
     if (!idOrClient) return null;
     var q = String(idOrClient).trim().toLowerCase();
@@ -422,6 +477,31 @@
     renderFunnel();
     renderGrid();
     renderLog();
+    renderDigest();
+  }
+
+  function renderDigest() {
+    var el = document.getElementById("digest");
+    if (!el) return;
+    var digest = getDailyDigest();
+    if (digest.items.length === 0) {
+      el.innerHTML = '<div class="digest-title">Today</div><div class="digest-empty">Nothing needs your attention right now. 🎉</div>';
+      return;
+    }
+    el.innerHTML = '<div class="digest-title">Today — ' + digest.totalActionable + ' thing(s) worth a look</div>' +
+      digest.items.map(function (item, i) {
+        return '<div class="digest-row" data-jump="' + item.jumpTo + '" data-idx="' + i + '">' +
+          '<span class="digest-icon">' + item.icon + '</span>' +
+          '<span>' + escapeHtml(item.text) + '</span>' +
+          '<span class="digest-count">' + item.count + '</span>' +
+        '</div>';
+      }).join("");
+    el.querySelectorAll("[data-jump]").forEach(function (row) {
+      row.addEventListener("click", function () {
+        var target = row.getAttribute("data-jump") === "invoices" ? document.getElementById("tabInvoicesBtn") : document.getElementById("tabJobsBtn");
+        target.click();
+      });
+    });
   }
 
   // Ordinal sequential ramp (blue), steps 300/450/600 — dark-surface-safe
@@ -509,6 +589,11 @@
         updateStatus({ id_or_company: a.id, status: sel.value }, "you");
         render();
       });
+      if (lastAppStatuses[a.id] !== undefined && lastAppStatuses[a.id] !== a.status) {
+        var cardEl = document.getElementById("cardwrap-" + a.id);
+        if (cardEl) cardEl.classList.add("flash-update");
+      }
+      lastAppStatuses[a.id] = a.status;
     });
   }
 
@@ -516,14 +601,18 @@
     var dimmed = a.status === "rejected" || a.status === "withdrawn" || a.status === "ghosted";
     var days = daysSince(a.dateApplied);
     var isFollowup = a.status === "applied" && days >= FOLLOWUP_MIN_DAYS && days < GHOST_THRESHOLD_DAYS;
+    var entity = entityStyle(a.company);
 
     var options = STATUS_OPTIONS.map(function (s) {
       return '<option value="' + s + '" ' + (s === a.status ? "selected" : "") + '>' + s + '</option>';
     }).join("");
 
-    return '<div class="card ' + (dimmed ? "dimmed" : "") + '">' +
+    return '<div class="card ' + (dimmed ? "dimmed" : "") + '" id="cardwrap-' + a.id + '" style="--entity-color:' + entity.color + ';">' +
       '<div class="row-top">' +
-        '<div><div class="company">' + escapeHtml(a.company) + '</div><div class="role">' + escapeHtml(a.role) + '</div></div>' +
+        '<div class="name-row">' +
+          '<div class="entity-icon">' + entity.initial + '</div>' +
+          '<div><div class="company">' + escapeHtml(a.company) + '</div><div class="role">' + escapeHtml(a.role) + '</div></div>' +
+        '</div>' +
         '<div class="days">' + days + 'd ago</div>' +
       '</div>' +
       '<div>' +
@@ -563,6 +652,7 @@
     renderInvoiceFunnel();
     renderInvoiceGrid();
     renderInvoiceLog();
+    renderDigest();
   }
 
   function renderInvoiceFunnel() {
@@ -617,6 +707,11 @@
         updateInvoiceStatus({ id_or_client: i.id, status: sel.value }, "you");
         renderInvoices();
       });
+      if (lastInvoiceStatuses[i.id] !== undefined && lastInvoiceStatuses[i.id] !== i.status) {
+        var cardEl = document.getElementById("invcardwrap-" + i.id);
+        if (cardEl) cardEl.classList.add("flash-update");
+      }
+      lastInvoiceStatuses[i.id] = i.status;
     });
   }
 
@@ -624,14 +719,18 @@
     var dimmed = inv.status === "written_off" || inv.status === "ghosted";
     var overdue = daysOverdue(inv);
     var overdueLabel = overdue > 0 ? overdue + "d overdue" : (overdue === 0 ? "due today" : (-overdue) + "d until due");
+    var entity = entityStyle(inv.client);
 
     var options = INVOICE_STATUS_OPTIONS.map(function (s) {
       return '<option value="' + s + '" ' + (s === inv.status ? "selected" : "") + '>' + s.replace("_", " ") + '</option>';
     }).join("");
 
-    return '<div class="card ' + (dimmed ? "dimmed" : "") + '">' +
+    return '<div class="card ' + (dimmed ? "dimmed" : "") + '" id="invcardwrap-' + inv.id + '" style="--entity-color:' + entity.color + ';">' +
       '<div class="row-top">' +
-        '<div><div class="company">' + escapeHtml(inv.client) + '</div><div class="role">' + escapeHtml(inv.project) + '</div></div>' +
+        '<div class="name-row">' +
+          '<div class="entity-icon">' + entity.initial + '</div>' +
+          '<div><div class="company">' + escapeHtml(inv.client) + '</div><div class="role">' + escapeHtml(inv.project) + '</div></div>' +
+        '</div>' +
         '<div class="days">' + money(inv.amount) + '</div>' +
       '</div>' +
       '<div>' +
@@ -919,6 +1018,30 @@
     };
   }
 
+  // ---------- cross-domain daily digest ----------
+  // Combines both trackers into one prioritized "what needs attention" list —
+  // a single call spans state an agent would otherwise have to check via
+  // several separate tool calls across two unrelated boards.
+
+  function getDailyDigest() {
+    var staleJobs = state.apps.filter(function (a) { return a.status === "applied" && daysSince(a.dateApplied) >= GHOST_THRESHOLD_DAYS; });
+    var staleInvoices = state.invoices.filter(function (i) { return i.status === "sent" && daysOverdue(i) >= GHOST_THRESHOLD_DAYS; });
+    var jobFollowups = getFollowupReminders();
+    var invoiceFollowups = getInvoiceFollowupReminders();
+    var leverage = getLeverageOpportunities();
+
+    var items = [];
+    if (staleJobs.length > 0) items.push({ type: "stale_jobs", icon: "👻", count: staleJobs.length, names: staleJobs.map(function (a) { return a.company; }), text: staleJobs.length + " job application(s) look ghosted — call flag_stale_applications", jumpTo: "jobs" });
+    if (staleInvoices.length > 0) items.push({ type: "stale_invoices", icon: "👻", count: staleInvoices.length, names: staleInvoices.map(function (i) { return i.client; }), text: staleInvoices.length + " invoice(s) look ghosted — call flag_stale_invoices", jumpTo: "invoices" });
+    if (jobFollowups.length > 0) items.push({ type: "job_followups", icon: "⏰", count: jobFollowups.length, names: jobFollowups.map(function (a) { return a.company; }), text: jobFollowups.length + " application(s) worth a follow-up", jumpTo: "jobs" });
+    if (invoiceFollowups.length > 0) items.push({ type: "invoice_followups", icon: "⏰", count: invoiceFollowups.length, names: invoiceFollowups.map(function (i) { return i.client; }), text: invoiceFollowups.length + " invoice(s) worth a payment reminder", jumpTo: "invoices" });
+    leverage.forEach(function (o) {
+      items.push({ type: "leverage", icon: "🎯", count: o.candidates.length, names: o.candidates.map(function (c) { return c.company; }), text: "Offer from " + o.offerFrom + " — worth notifying " + o.candidates.length + " other live process(es)", jumpTo: "jobs" });
+    });
+
+    return { items: items, totalActionable: items.reduce(function (s, i) { return s + i.count; }, 0) };
+  }
+
   // ---------- WebMCP tool registration ----------
 
   function registerTools() {
@@ -1164,6 +1287,15 @@
       inputSchema: { type: "object", properties: {} },
       async execute() {
         return { content: [{ type: "text", text: JSON.stringify(computePaymentSummary(), null, 2) }] };
+      }
+    });
+
+    document.modelContext.registerTool({
+      name: "get_daily_digest",
+      description: "One call spanning both trackers: stale job applications and invoices worth flagging, follow-ups worth sending, and any offer worth leveraging against other live processes. Use this first thing to see what actually needs attention today.",
+      inputSchema: { type: "object", properties: {} },
+      async execute() {
+        return { content: [{ type: "text", text: JSON.stringify(getDailyDigest(), null, 2) }] };
       }
     });
   }

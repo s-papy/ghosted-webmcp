@@ -44,6 +44,11 @@ overdue invoice with no response as ghosted in one call, the same way
 by an employer and being ignored by a client are the same problem wearing a
 different name.
 
+A `get_daily_digest` tool spans both boards in a single call — stale items,
+follow-ups worth sending, any offer worth leveraging — the kind of "what
+actually needs me today" view that would otherwise take an agent several
+separate calls across two unrelated trackers.
+
 ## The tools
 
 **Job applications**
@@ -72,6 +77,12 @@ different name.
 | `flag_stale_invoices` | no | Mark every invoice overdue 21+ days with no response as ghosted, in one call. |
 | `get_invoice_followup_reminders` | yes | Invoices 1-20 days overdue — worth a polite reminder before assuming the worst. |
 | `get_payment_summary` | yes | Total invoiced, paid, unpaid, amount owed by ghosted clients, late-payment rate, average payment delay. |
+
+**Cross-domain**
+
+| Tool | Read-only? | What it does |
+|---|---|---|
+| `get_daily_digest` | yes | One call spanning both trackers: stale items, follow-ups worth sending, and any offer worth leveraging. |
 
 ## Running it
 
