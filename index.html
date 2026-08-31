@@ -40,13 +40,44 @@
   }
   .wrap { max-width: 960px; margin: 0 auto; padding: 32px 20px 80px; }
   header h1 { font-size: 1.9rem; margin: 0 0 6px; }
-  header p.tagline { color: var(--muted); max-width: 640px; margin: 0 0 6px; }
-  header p.stat {
+  header p.tagline { color: var(--muted); font-size: 1rem; max-width: 560px; margin: 0 0 18px; }
+
+  .compare-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 16px;
+    flex-wrap: wrap;
+  }
+  .compare-card {
+    flex: 1;
+    min-width: 180px;
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 14px 16px;
+  }
+  .compare-card.good { border-color: color-mix(in srgb, var(--good) 40%, var(--border)); }
+  .compare-icon { font-size: 1.4rem; margin-bottom: 4px; }
+  .compare-label { font-weight: 700; font-size: 0.95rem; }
+  .compare-sub { color: var(--muted); font-size: 0.8rem; margin-top: 2px; }
+  .compare-vs { color: var(--faint); font-size: 0.8rem; font-weight: 600; }
+
+  p.stat-pill {
+    display: inline-block;
     color: var(--warning);
-    font-size: 0.92rem;
+    font-size: 0.85rem;
+    background: color-mix(in srgb, var(--warning) 10%, var(--panel));
+    border: 1px solid color-mix(in srgb, var(--warning) 35%, transparent);
+    border-radius: 999px;
+    padding: 6px 14px;
     margin: 0 0 24px;
   }
-  header p.stat a { color: var(--warning); }
+  p.stat-pill a { color: var(--warning); }
+
+  details.tech-details { margin-top: 4px; }
+  details.tech-details summary { cursor: pointer; color: var(--link); font-size: 0.82rem; }
+  details.tech-details .tech-body { margin-top: 8px; }
 
   .summary {
     display: grid;
@@ -213,20 +244,22 @@
 <div class="wrap">
   <header>
     <h1>🪳 Roach Motel Exit</h1>
-    <p class="tagline">
-      A subscription dashboard for a person and their AI agent. Cancel by hand
-      and you get the maze every subscription business builds on purpose. Ask
-      your agent to cancel through its WebMCP tools and it just happens —
-      because this page tells the agent the truth about what "cancel" means,
-      instead of hiding it behind a retention flow.
-    </p>
-    <p class="stat">
-      The average subscriber hits 6.2 dark patterns and 6.7 clicks to cancel
-      a service — bad enough that the US FTC built a rule around it
-      (<a href="https://www.ftc.gov/legal-library/browse/rules/negative-option-rule" target="_blank" rel="noopener">"Click to Cancel"</a>).
-      Try the <strong>Cancel</strong> button below by hand, then ask an agent
-      to cancel the same thing.
-    </p>
+    <p class="tagline">Cancelling should be one click. Businesses make it a maze on purpose — try it below.</p>
+    <div class="compare-row">
+      <div class="compare-card">
+        <div class="compare-icon">🙋</div>
+        <div class="compare-label">You click Cancel</div>
+        <div class="compare-sub">3-step maze: retention offer, guilt, forced reason</div>
+      </div>
+      <div class="compare-vs">vs</div>
+      <div class="compare-card good">
+        <div class="compare-icon">🤖</div>
+        <div class="compare-label">Agent calls the tool</div>
+        <div class="compare-sub">Done instantly — no maze, no retention offer</div>
+      </div>
+    </div>
+    <p class="stat-pill">⚠ On average: 6.2 dark patterns, 6.7 clicks to cancel — bad enough the US FTC made a
+      <a href="https://www.ftc.gov/legal-library/browse/rules/negative-option-rule" target="_blank" rel="noopener">"Click to Cancel"</a> rule about it.</p>
   </header>
 
   <section class="summary" id="summary"></section>
@@ -250,15 +283,20 @@
   </div>
 
   <footer>
-    Everything lives in this browser's <code>localStorage</code> — no server,
-    no real subscriptions, no real money, no connection to any real account.
-    Brand names are illustrative example data only; this project is not
-    affiliated with or endorsed by any company named on this page. Eight
-    WebMCP tools: <code>list_subscriptions</code>, <code>get_subscription</code>,
-    <code>search_subscriptions</code>, <code>get_savings_summary</code>,
-    <code>cancel_subscription</code>, <code>pause_subscription</code>,
-    <code>resume_subscription</code>, <code>cancel_all_unused</code>.
-    MIT licensed.
+    Fake data, real page — nothing here connects to a real account. MIT licensed.
+    <details class="tech-details">
+      <summary>Technical details</summary>
+      <div class="tech-body">
+        Everything lives in this browser's <code>localStorage</code> — no server,
+        no real subscriptions, no real money, no connection to any real account.
+        Brand names are illustrative example data only; this project is not
+        affiliated with or endorsed by any company named on this page. Eight
+        WebMCP tools: <code>list_subscriptions</code>, <code>get_subscription</code>,
+        <code>search_subscriptions</code>, <code>get_savings_summary</code>,
+        <code>cancel_subscription</code>, <code>pause_subscription</code>,
+        <code>resume_subscription</code>, <code>cancel_all_unused</code>.
+      </div>
+    </details>
   </footer>
 </div>
 
