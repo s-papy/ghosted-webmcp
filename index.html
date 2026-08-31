@@ -50,6 +50,29 @@
     .main-content { padding: 36px 40px 80px; }
   }
 
+  .agent-howto {
+    background: color-mix(in srgb, var(--good) 8%, var(--panel));
+    border: 1px solid color-mix(in srgb, var(--good) 35%, var(--border));
+    border-radius: 14px;
+    padding: 18px 22px;
+    margin-bottom: 20px;
+  }
+  .agent-howto h2 { font-size: 1rem; margin: 0 0 10px; }
+  .agent-howto ol { margin: 0 0 8px; padding-left: 20px; color: var(--muted); font-size: 0.88rem; }
+  .agent-howto ol li { margin-bottom: 4px; }
+  .agent-howto ol code { background: var(--panel-2); padding: 1px 5px; border-radius: 4px; color: var(--text); }
+  .agent-prompts { list-style: none; margin: 0 0 10px; padding: 0; display: flex; flex-direction: column; gap: 6px; }
+  .agent-prompts li {
+    background: var(--panel-2);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 8px 12px;
+    font-size: 0.85rem;
+    font-style: italic;
+    color: var(--text);
+  }
+  .agent-fallback { color: var(--faint); font-size: 0.8rem; margin: 0; }
+
   .digest {
     background: linear-gradient(135deg, color-mix(in srgb, var(--link) 14%, var(--panel)), var(--panel));
     border: 1px solid color-mix(in srgb, var(--link) 30%, var(--border));
@@ -298,6 +321,21 @@
   </aside>
 
 <main class="main-content">
+  <section class="agent-howto">
+    <h2>🤖 Try it with an agent</h2>
+    <ol>
+      <li>Open this page in <strong>Chrome</strong> with <code>chrome://flags/#enable-webmcp-testing</code> turned on, or in <strong>ChatGPT's in-app browser</strong>.</li>
+      <li>Then just ask, in plain language — no special syntax:</li>
+    </ol>
+    <ul class="agent-prompts">
+      <li>"Check my job pipeline for anything I should know about."</li>
+      <li>"Flag any applications that have gone silent."</li>
+      <li>"Log a new invoice for Acme Co — $800, due in 14 days."</li>
+      <li>"I just got an offer — who else should I notify?"</li>
+    </ul>
+    <p class="agent-fallback">No agent handy right now? Everything below also works by hand — click Flag, use the dropdowns, click a card. But watching an agent do it in one call, live, is the whole point.</p>
+  </section>
+
   <div class="digest" id="digest"></div>
 
   <div id="jobsPanel">
