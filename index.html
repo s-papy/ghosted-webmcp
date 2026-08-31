@@ -522,7 +522,13 @@
     }
   }
 
-  function save() { localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); }
+  function save() {
+    // load() already falls back gracefully when storage is unavailable (private
+    // browsing, storage-blocking extensions, enterprise policy) — save() must fail
+    // the same way, or every mutating tool call throws uncaught instead of just
+    // running in-memory for the session.
+    try { localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); } catch (e) {}
+  }
   function clone(x) { return JSON.parse(JSON.stringify(x)); }
 
   var state = load();
