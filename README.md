@@ -1,23 +1,26 @@
 # Cash Pipeline
 
-A board of grants, hackathons and freelance leads that a person and their AI
-agent can both read and edit — live, on the same page. Entry for
-**[The WebMCP Challenge](https://webmcp.devpost.com/)** (deadline 3 September
-2026, 1pm PDT).
+A living board of grants, hackathons and freelance leads — not a one-shot
+search, but a pipeline you and your AI agent keep coming back to, together,
+on the same page. Entry for **[The WebMCP Challenge](https://webmcp.devpost.com/)**
+(deadline 3 September 2026, 1pm PDT).
 
 **Live demo:** https://s-papy.github.io/cash-pipeline-webmcp/
 **Video:** _add the YouTube link here_
 
 ## Why WebMCP is a strong fit
 
-Tracking cash opportunities (apply-for-a-grant, join-a-hackathon,
-freelance-lead) is a chore an agent is well suited to help with — it can spot
-a new opportunity while researching the web and log it, or check in on
-deadlines — but only if it can act on the *same* data a human is looking at,
-not a private copy it can't be checked against.
+A search gives you an answer once and forgets it. Cash opportunities
+(grants, hackathons, freelance leads) need the opposite: a place that
+persists between visits, that an agent can keep updating as it spots new
+leads while researching the web or checks in on deadlines, and that a human
+keeps opening to see what changed. The value isn't the lookup — it's staying
+attached to the same evolving board over time, so both sides depend on it
+instead of re-running a query and starting from zero.
 
-This page keeps one shared list in `localStorage` and exposes it two ways at
-once:
+That only works if the agent acts on the *same* data the human is looking
+at, not a private copy it can't be checked against. This page keeps one
+shared list in `localStorage` and exposes it two ways at once:
 
 - **A human UI** — a table, a filter bar, an "add" dialog.
 - **Six WebMCP tools** (`document.modelContext.registerTool`) — `add_opportunity`,
