@@ -1,10 +1,11 @@
 # Ghosted
 
-A job application tracker that admits when a company has gone silent, instead
-of leaving you to guess. An agent using this page's WebMCP tools can log
-applications the moment you apply and flag every stale one in a single call.
-Entry for **[The WebMCP Challenge](https://webmcp.devpost.com/)** (deadline 3
-September 2026, 1pm PDT).
+A tracker that admits when someone's gone silent — a job application, or an
+unpaid freelance invoice — instead of leaving you to guess. An agent using
+this page's WebMCP tools can log things the moment they happen and flag every
+stale one in a single call. Entry for
+**[The WebMCP Challenge](https://webmcp.devpost.com/)** (deadline 3 September
+2026, 1pm PDT).
 
 **Live demo:** https://s-papy.github.io/ghosted-webmcp/
 **Video:** _add the YouTube link here_
@@ -34,7 +35,18 @@ It also tracks a real personal benchmark — average response time — the same
 kind of KPI industry ghosting research uses, computed automatically from your
 own data instead of a number you'd have to calculate by hand.
 
+The same shape of problem shows up for freelancers: 85% get paid late, and
+they're owed $6,000 in unpaid invoices on average — they lose over a full
+workday a month just chasing clients. It's the identical mechanic applied to
+a second, equally real kind of silence: `flag_stale_invoices` marks every
+overdue invoice with no response as ghosted in one call, the same way
+`flag_stale_applications` does for job applications, because being ignored
+by an employer and being ignored by a client are the same problem wearing a
+different name.
+
 ## The tools
+
+**Job applications**
 
 | Tool | Read-only? | What it does |
 |---|---|---|
@@ -47,6 +59,19 @@ own data instead of a number you'd have to calculate by hand.
 | `get_followup_reminders` | yes | Applications 7-20 days old — the window where following up is still worth it. |
 | `get_pipeline_summary` | yes | Total applications, response rate, ghost rate, applications awaiting follow-up. |
 | `get_leverage_opportunities` | yes | If any application reached offer stage, list other live applications worth notifying. |
+
+**Freelance invoices**
+
+| Tool | Read-only? | What it does |
+|---|---|---|
+| `log_invoice` | no | Log a new invoice (client, project, amount, dates). |
+| `get_invoice` | yes | Full detail on one invoice, matched by id or client. |
+| `list_invoices` | yes | List invoices, optionally filtered by status. |
+| `search_invoices` | yes | Filter by text and/or status. |
+| `update_invoice_status` | no | Move an invoice to a new status (paid, disputed, ghosted, written off). |
+| `flag_stale_invoices` | no | Mark every invoice overdue 21+ days with no response as ghosted, in one call. |
+| `get_invoice_followup_reminders` | yes | Invoices 1-20 days overdue — worth a polite reminder before assuming the worst. |
+| `get_payment_summary` | yes | Total invoiced, paid, unpaid, amount owed by ghosted clients, late-payment rate, average payment delay. |
 
 ## Running it
 
@@ -71,9 +96,9 @@ To test the WebMCP tools:
 ## Data & privacy
 
 Everything lives in the browser's own `localStorage` — eight demo
-applications with fictional company names, no real inbox access, no real job
-board connection. Nothing is sent to a server; there is no server. Clearing
-site data resets the board.
+applications and seven demo invoices with fictional company/client names, no
+real inbox access, no real job board or bank connection. Nothing is sent to
+a server; there is no server. Clearing site data resets the board.
 
 ## License
 
