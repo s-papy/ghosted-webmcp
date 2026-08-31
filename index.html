@@ -547,6 +547,10 @@
   function findApp(idOrCompany) {
     if (!idOrCompany) return null;
     var q = String(idOrCompany).trim().toLowerCase();
+    // an empty-after-trim query would match every record via the substring
+    // fallback below (indexOf("") is always 0) — that's "match the first
+    // record", not "found a match", so bail out instead.
+    if (!q) return null;
     return state.apps.find(function (a) {
       return a.id.toLowerCase() === q || a.company.toLowerCase() === q;
     }) || state.apps.find(function (a) {
@@ -581,6 +585,7 @@
   function findInvoice(idOrClient) {
     if (!idOrClient) return null;
     var q = String(idOrClient).trim().toLowerCase();
+    if (!q) return null;
     return state.invoices.find(function (i) {
       return i.id.toLowerCase() === q || i.client.toLowerCase() === q;
     }) || state.invoices.find(function (i) {
