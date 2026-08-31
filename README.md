@@ -6,7 +6,7 @@ agent using this page's WebMCP tools cancels in one call. Entry for
 **[The WebMCP Challenge](https://webmcp.devpost.com/)** (deadline 3 September
 2026, 1pm PDT).
 
-**Live demo:** _add the deployed URL here after publishing_
+**Live demo:** https://s-papy.github.io/roach-motel-exit-webmcp/
 **Video:** _add the YouTube link here_
 
 ## Why WebMCP is a strong fit
