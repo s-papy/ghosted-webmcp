@@ -24,6 +24,12 @@ only works because the page exposes real, callable actions instead of a UI
 the agent would have to guess at, and because the state is shared: what the
 agent logs or flags shows up on the same page you're looking at, immediately.
 
+Paid trackers sell "salary negotiation" as a static column you have to
+remember to check. Here it's a live cross-reference: the moment one
+application reaches offer stage, the page surfaces which other still-active
+applications are worth notifying about the competing offer — computed from
+the same shared state, not a feature you have to go looking for.
+
 ## The tools
 
 | Tool | Read-only? | What it does |
@@ -36,6 +42,7 @@ agent logs or flags shows up on the same page you're looking at, immediately.
 | `flag_stale_applications` | no | Mark every application silent for 21+ days as ghosted, in one call. |
 | `get_followup_reminders` | yes | Applications 7-20 days old — the window where following up is still worth it. |
 | `get_pipeline_summary` | yes | Total applications, response rate, ghost rate, applications awaiting follow-up. |
+| `get_leverage_opportunities` | yes | If any application reached offer stage, list other live applications worth notifying. |
 
 ## Running it
 

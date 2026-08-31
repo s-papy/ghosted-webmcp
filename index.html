@@ -64,6 +64,20 @@
   }
   p.stat-pill a { color: var(--warning); }
 
+  .insight {
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+    background: color-mix(in srgb, var(--good) 10%, var(--panel));
+    border: 1px solid color-mix(in srgb, var(--good) 35%, transparent);
+    border-radius: 10px;
+    padding: 10px 14px;
+    font-size: 0.84rem;
+    color: var(--muted);
+    margin-bottom: 12px;
+  }
+  .insight b { color: var(--text); }
+
   .summary {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
@@ -191,6 +205,7 @@
     <p class="stat-pill">⚠ 53% of job seekers were ghosted by an employer in the past year, and it now takes ~40 applications to land one interview.</p>
   </header>
 
+  <div id="insights"></div>
   <section class="summary" id="summary"></section>
 
   <div class="toolbar">
@@ -306,9 +321,22 @@
   // ---------- rendering ----------
 
   function render() {
+    renderInsights();
     renderSummary();
     renderGrid();
     renderLog();
+  }
+
+  function renderInsights() {
+    var el = document.getElementById("insights");
+    var opportunities = getLeverageOpportunities();
+    if (opportunities.length === 0) { el.innerHTML = ""; return; }
+    el.innerHTML = opportunities.map(function (o) {
+      var names = o.candidates.map(function (c) { return c.company; }).join(", ");
+      return '<div class="insight">🎯 <span>You have an offer from <b>' + escapeHtml(o.offerFrom) +
+        '</b> — worth telling ' + o.candidates.length + ' other live process' + (o.candidates.length === 1 ? "" : "es") +
+        ' you have a competing offer, to speed things up: <b>' + escapeHtml(names) + '</b></span></div>';
+    }).join("");
   }
 
   function statCard(label, value, cls) {
@@ -478,6 +506,25 @@
     });
   }
 
+  function getLeverageOpportunities() {
+    var offers = state.apps.filter(function (a) { return a.status === "offer"; });
+    // "interviewing" is always live; "applied" only counts if it hasn't gone
+    // stale yet — no point suggesting you leverage an offer against a company
+    // that's already gone dark for weeks.
+    var live = state.apps.filter(function (a) {
+      if (a.status === "interviewing") return true;
+      if (a.status === "applied") return daysSince(a.dateApplied) < GHOST_THRESHOLD_DAYS;
+      return false;
+    });
+    if (offers.length === 0 || live.length === 0) return [];
+    return offers.map(function (o) {
+      return {
+        offerFrom: o.company,
+        candidates: live.map(function (a) { return { id: a.id, company: a.company, role: a.role, status: a.status }; })
+      };
+    });
+  }
+
   function round1(n) { return Math.round(n * 10) / 10; }
 
   function computePipelineSummary() {
@@ -618,6 +665,15 @@
       inputSchema: { type: "object", properties: {} },
       async execute() {
         return { content: [{ type: "text", text: JSON.stringify(computePipelineSummary(), null, 2) }] };
+      }
+    });
+
+    document.modelContext.registerTool({
+      name: "get_leverage_opportunities",
+      description: "If any application has reached the offer stage, list the other still-live applications (applied or interviewing) worth notifying about the competing offer to speed up their process.",
+      inputSchema: { type: "object", properties: {} },
+      async execute() {
+        return { content: [{ type: "text", text: JSON.stringify(getLeverageOpportunities(), null, 2) }] };
       }
     });
   }
