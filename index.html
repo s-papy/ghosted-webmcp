@@ -339,6 +339,7 @@
   .detail-history { max-height: 160px; overflow-y: auto; }
   .detail-history .log-entry { font-size: 0.8rem; }
   .detail-history .empty { color: var(--faint); font-size: 0.82rem; }
+  .detail-notes { font-size: 0.85rem; line-height: 1.5; white-space: pre-wrap; margin: 0 0 var(--sp-5); }
 </style>
 </head>
 <body>
@@ -800,6 +801,18 @@
       return '<button class="' + (isCurrent ? "current" : "") + '" data-set-status="' + s + '" ' + (isCurrent ? "disabled" : "") + '>' + s + '</button>';
     }).join("");
 
+    // escapeHtml alone doesn't neutralize a javascript:/data: href -- neither
+    // needs an HTML-special character to run -- so only render as a link when
+    // the scheme is actually http(s); anything else shows as plain text.
+    var urlFact = a.url
+      ? '<div><div class="fact-label">Posting</div><div class="fact-value">' +
+          (/^https?:\/\//i.test(a.url)
+            ? '<a href="' + escapeHtml(a.url) + '" target="_blank" rel="noopener noreferrer">Link ↗</a>'
+            : escapeHtml(a.url)) +
+        '</div></div>'
+      : "";
+    var notesBlock = a.notes ? '<h4>Notes</h4><div class="detail-notes">' + escapeHtml(a.notes) + '</div>' : "";
+
     var body = document.getElementById("detailModalBody");
     body.innerHTML =
       '<div class="detail-header">' +
@@ -812,9 +825,11 @@
         '<div><div class="fact-label">Days since</div><div class="fact-value">' + days + 'd</div></div>' +
         '<div><div class="fact-label">Status</div><div class="fact-value">' + STATUS_ICON[a.status] + ' ' + a.status + '</div></div>' +
         '<div><div class="fact-label">Responded</div><div class="fact-value">' + (a.respondedAt ? escapeHtml(a.respondedAt) : "—") + '</div></div>' +
+        urlFact +
       '</div>' +
       '<h4>Change status</h4>' +
       '<div class="detail-actions">' + actions + '</div>' +
+      notesBlock +
       '<h4>History for ' + escapeHtml(a.company) + '</h4>' +
       '<div class="detail-history">' +
         (history.length ? history.map(renderLogEntry).join("") : '<div class="empty">No recorded activity for this application yet.</div>') +
@@ -853,6 +868,7 @@
       '</div>' +
       '<div class="detail-facts">' +
         '<div><div class="fact-label">Amount</div><div class="fact-value">' + money(inv.amount) + '</div></div>' +
+        '<div><div class="fact-label">Sent</div><div class="fact-value">' + escapeHtml(inv.dateSent) + '</div></div>' +
         '<div><div class="fact-label">Due date</div><div class="fact-value">' + escapeHtml(inv.dueDate) + '</div></div>' +
         '<div><div class="fact-label">Status</div><div class="fact-value">' + INVOICE_STATUS_ICON[inv.status] + ' ' + inv.status.replace("_", " ") + '</div></div>' +
         '<div><div class="fact-label">' + (overdue > 0 ? "Overdue by" : "Due in") + '</div><div class="fact-value">' + overdueLabel + '</div></div>' +
