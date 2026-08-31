@@ -3,683 +3,653 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Cash Pipeline — track opportunities with your agent</title>
-<meta name="description" content="A shared board of grants, hackathons and freelance leads that you and your AI agent can both read and edit — built for the WebMCP Challenge.">
-<meta name="license" content="MIT">
+<title>Roach Motel Exit — cancel subscriptions without the maze</title>
 <style>
   :root {
     --bg: #0b0d12;
-    --card: #151822;
-    --border: #262b38;
+    --panel: #12151c;
+    --panel-2: #171b24;
+    --border: #262b36;
     --text: #e8eaf0;
-    --muted: #8b92a5;
-    --green: #34d399;
-    --red: #f87171;
-    --yellow: #fbbf24;
-    --accent: #818cf8;
+    --muted: #8b92a3;
+    --accent: #6ee7b7;
+    --danger: #f87171;
+    --warn: #fbbf24;
+    --link: #93c5fd;
   }
   * { box-sizing: border-box; }
   body {
+    margin: 0;
     background: var(--bg);
     color: var(--text);
-    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
-    margin: 0;
-    padding: 0 0 60px 0;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    line-height: 1.5;
   }
-  header {
-    padding: 32px 24px 16px;
-    max-width: 1000px;
-    margin: 0 auto;
+  .wrap { max-width: 960px; margin: 0 auto; padding: 32px 20px 80px; }
+  header h1 { font-size: 1.9rem; margin: 0 0 6px; }
+  header p.tagline { color: var(--muted); max-width: 640px; margin: 0 0 6px; }
+  header p.stat {
+    color: var(--warn);
+    font-size: 0.92rem;
+    margin: 0 0 24px;
   }
-  header h1 { margin: 0 0 6px 0; font-size: 26px; }
-  header p { color: var(--muted); margin: 0; font-size: 14px; line-height: 1.5; max-width: 640px; }
-  main { max-width: 1000px; margin: 0 auto; padding: 0 24px; }
+  header p.stat a { color: var(--warn); }
+
+  .summary {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: 12px;
+    margin-bottom: 28px;
+  }
+  .stat-card {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 16px 18px;
+  }
+  .stat-card .label {
+    font-size: 0.72rem;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: var(--muted);
+    margin-bottom: 6px;
+  }
+  .stat-card .value { font-size: 1.6rem; font-weight: 700; }
+  .stat-card.warn .value { color: var(--warn); }
+  .stat-card.good .value { color: var(--accent); }
 
   .toolbar {
     display: flex;
     gap: 10px;
+    margin-bottom: 16px;
     flex-wrap: wrap;
-    margin: 20px 0;
   }
-  .toolbar select, .toolbar input[type="text"] {
-    background: var(--card);
+  input[type="text"], select {
+    background: var(--panel-2);
     border: 1px solid var(--border);
     color: var(--text);
     border-radius: 8px;
-    padding: 8px 10px;
-    font-size: 13px;
+    padding: 8px 12px;
+    font-size: 0.9rem;
   }
-  .toolbar button {
-    background: var(--accent);
-    color: #0b0d12;
-    border: none;
-    border-radius: 8px;
-    padding: 8px 14px;
-    font-size: 13px;
-    font-weight: 600;
-    cursor: pointer;
-  }
-  .toolbar button.secondary {
-    background: transparent;
-    color: var(--text);
-    border: 1px solid var(--border);
-  }
+  select { cursor: pointer; }
 
-  .summary-cards {
+  .grid {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-    gap: 12px;
-    margin: 16px 0 24px;
+    grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+    gap: 14px;
+    margin-bottom: 32px;
   }
-  .summary-cards .card {
-    background: var(--card);
+  .card {
+    background: var(--panel);
     border: 1px solid var(--border);
-    border-radius: 10px;
-    padding: 14px 16px;
+    border-radius: 14px;
+    padding: 16px 18px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    transition: opacity 0.2s;
   }
-  .summary-cards .label { color: var(--muted); font-size: 11px; text-transform: uppercase; letter-spacing: .04em; }
-  .summary-cards .value { font-size: 22px; font-weight: 600; margin-top: 4px; }
+  .card.canceled { opacity: 0.45; }
+  .card .row-top {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+  }
+  .card .name { font-weight: 700; font-size: 1.05rem; }
+  .card .category { color: var(--muted); font-size: 0.78rem; }
+  .card .price { font-size: 1.1rem; font-weight: 700; white-space: nowrap; }
+  .card .price span { font-size: 0.7rem; color: var(--muted); font-weight: 400; }
 
-  table { width: 100%; border-collapse: collapse; margin-bottom: 24px; }
-  th, td { text-align: left; padding: 10px 8px; border-bottom: 1px solid var(--border); font-size: 13px; vertical-align: top; }
-  th { color: var(--muted); font-weight: 500; font-size: 11px; text-transform: uppercase; letter-spacing: .04em; }
-  td.name a { color: var(--text); text-decoration: none; border-bottom: 1px dotted var(--muted); }
-  td.notes { color: var(--muted); max-width: 220px; }
-
-  .badge { display: inline-block; padding: 3px 9px; border-radius: 999px; font-size: 11px; font-weight: 600; }
-  .badge-spotted { background: rgba(139,146,165,.18); color: var(--muted); }
-  .badge-in_progress { background: rgba(129,140,248,.18); color: var(--accent); }
-  .badge-submitted { background: rgba(251,191,36,.18); color: var(--yellow); }
-  .badge-won { background: rgba(52,211,153,.18); color: var(--green); }
-  .badge-rejected { background: rgba(248,113,113,.18); color: var(--red); }
-
-  .deadline-urgent { color: var(--red); font-weight: 600; }
-  .deadline-soon { color: var(--yellow); }
-  .deadline-none { color: var(--muted); }
-
-  .row-actions button {
-    background: transparent;
+  .badge {
+    display: inline-block;
+    font-size: 0.72rem;
+    padding: 3px 9px;
+    border-radius: 999px;
     border: 1px solid var(--border);
-    color: var(--muted);
-    border-radius: 6px;
-    padding: 3px 8px;
-    font-size: 11px;
+    width: fit-content;
+  }
+  .badge.active { color: var(--accent); border-color: #1f4d3a; background: #0f2019; }
+  .badge.paused { color: var(--warn); border-color: #4d3f1f; background: #201a0f; }
+  .badge.canceled { color: var(--muted); }
+  .badge.unused { color: var(--danger); border-color: #4d1f1f; background: #200f0f; }
+  .badge.used { color: var(--muted); }
+
+  .card .meta { font-size: 0.8rem; color: var(--muted); }
+
+  .card-actions { display: flex; gap: 8px; margin-top: 4px; }
+  button {
+    font-family: inherit;
+    font-size: 0.85rem;
+    border-radius: 8px;
+    padding: 7px 12px;
     cursor: pointer;
-    margin-right: 4px;
-  }
-  .row-actions button:hover { color: var(--text); border-color: var(--accent); }
-
-  dialog {
-    background: var(--card);
+    border: 1px solid var(--border);
+    background: var(--panel-2);
     color: var(--text);
+  }
+  button.cancel-btn { border-color: #4d1f1f; color: var(--danger); }
+  button.cancel-btn:hover { background: #200f0f; }
+  button:disabled { opacity: 0.4; cursor: default; }
+
+  .log {
+    background: var(--panel);
     border: 1px solid var(--border);
     border-radius: 12px;
-    padding: 20px;
-    width: min(480px, 92vw);
+    padding: 14px 18px;
+    max-height: 220px;
+    overflow-y: auto;
   }
-  dialog::backdrop { background: rgba(0,0,0,.6); }
-  dialog h2 { margin-top: 0; font-size: 16px; }
-  dialog label { display: block; font-size: 12px; color: var(--muted); margin: 10px 0 4px; }
-  dialog input, dialog select, dialog textarea {
+  .log h2 { font-size: 0.95rem; margin: 0 0 10px; color: var(--muted); }
+  .log-entry { font-size: 0.82rem; padding: 4px 0; border-bottom: 1px dashed var(--border); color: var(--muted); }
+  .log-entry:last-child { border-bottom: none; }
+  .log-entry .who { color: var(--link); font-weight: 600; }
+  .log-entry .who.agent { color: var(--accent); }
+
+  footer { margin-top: 40px; color: var(--muted); font-size: 0.8rem; }
+  footer a { color: var(--link); }
+
+  /* Modal (the deliberate maze) */
+  .overlay {
+    position: fixed; inset: 0; background: rgba(0,0,0,0.6);
+    display: flex; align-items: center; justify-content: center;
+    z-index: 50; padding: 20px;
+  }
+  .modal {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    max-width: 420px;
     width: 100%;
-    background: #0f1219;
-    border: 1px solid var(--border);
-    color: var(--text);
-    border-radius: 8px;
-    padding: 8px 10px;
-    font-size: 13px;
-    font-family: inherit;
+    padding: 24px;
   }
-  dialog textarea { resize: vertical; min-height: 50px; }
-  dialog .dialog-actions { display: flex; justify-content: flex-end; gap: 8px; margin-top: 16px; }
-  dialog .dialog-actions button { padding: 7px 14px; border-radius: 8px; font-size: 13px; cursor: pointer; }
-  dialog .dialog-actions button[value="cancel"] { background: transparent; border: 1px solid var(--border); color: var(--text); }
-  dialog .dialog-actions button[value="save"] { background: var(--accent); border: none; color: #0b0d12; font-weight: 600; }
-
-  #empty-state { color: var(--muted); font-size: 14px; padding: 30px 0; text-align: center; }
-
-  .agent-note {
-    margin-top: 40px;
-    padding: 14px 16px;
-    background: var(--card);
-    border: 1px solid var(--border);
-    border-radius: 10px;
-    font-size: 12px;
-    color: var(--muted);
-    line-height: 1.6;
+  .modal h3 { margin: 0 0 10px; font-size: 1.1rem; }
+  .modal p { color: var(--muted); font-size: 0.9rem; }
+  .modal .step-indicator { font-size: 0.72rem; color: var(--muted); margin-bottom: 12px; }
+  .modal textarea {
+    width: 100%; background: var(--panel-2); border: 1px solid var(--border);
+    color: var(--text); border-radius: 8px; padding: 10px; font-family: inherit;
+    font-size: 0.88rem; min-height: 70px; margin: 10px 0;
   }
-  .agent-note code { color: var(--accent); }
-  footer {
-    max-width: 1000px;
-    margin: 40px auto 0;
-    padding: 0 24px;
-    color: var(--muted);
-    font-size: 12px;
-  }
-  footer a { color: var(--muted); }
+  .modal .modal-actions { display: flex; flex-direction: column; gap: 8px; margin-top: 16px; }
+  .modal .modal-actions button { width: 100%; padding: 10px; }
+  .modal .btn-primary { background: var(--accent); color: #06251a; border: none; font-weight: 600; }
+  .modal .btn-danger-link { background: none; border: none; color: var(--muted); text-decoration: underline; font-size: 0.82rem; padding: 4px; }
 </style>
 </head>
 <body>
+<div class="wrap">
+  <header>
+    <h1>🪳 Roach Motel Exit</h1>
+    <p class="tagline">
+      A subscription dashboard for a person and their AI agent. Cancel by hand
+      and you get the maze every subscription business builds on purpose. Ask
+      your agent to cancel through its WebMCP tools and it just happens —
+      because this page tells the agent the truth about what "cancel" means,
+      instead of hiding it behind a retention flow.
+    </p>
+    <p class="stat">
+      The average subscriber hits 6.2 dark patterns and 6.7 clicks to cancel
+      a service — bad enough that the US FTC built a rule around it
+      (<a href="https://www.ftc.gov/legal-library/browse/rules/negative-option-rule" target="_blank" rel="noopener">"Click to Cancel"</a>).
+      Try the <strong>Cancel</strong> button below by hand, then ask an agent
+      to cancel the same thing.
+    </p>
+  </header>
 
-<header>
-  <h1>💸 Cash Pipeline</h1>
-  <p>
-    A board of grants, hackathons and freelance leads you can edit by hand — or hand to your
-    agent. Everything you see here is also exposed as
-    <a href="https://developer.chrome.com/docs/ai/webmcp" style="color:inherit">WebMCP</a>
-    tools: an agent in the same tab can add a lead it just found, mark one submitted, or read
-    back your nearest deadlines, and you watch it happen on this page rather than take its
-    word for it.
-  </p>
-</header>
-
-<main>
-  <div class="summary-cards" id="summary-cards"></div>
+  <section class="summary" id="summary"></section>
 
   <div class="toolbar">
-    <button id="btn-add">+ Add opportunity</button>
-    <select id="filter-status">
+    <input type="text" id="searchInput" placeholder="Search subscriptions…" />
+    <select id="statusFilter">
       <option value="">All statuses</option>
-      <option value="spotted">Spotted</option>
-      <option value="in_progress">In progress</option>
-      <option value="submitted">Submitted</option>
-      <option value="won">Won</option>
-      <option value="rejected">Rejected</option>
+      <option value="active">Active</option>
+      <option value="paused">Paused</option>
+      <option value="canceled">Canceled</option>
     </select>
-    <select id="filter-type">
-      <option value="">All types</option>
-      <option value="grant">Grant</option>
-      <option value="hackathon">Hackathon</option>
-      <option value="freelance">Freelance</option>
-      <option value="other">Other</option>
-    </select>
-    <input type="text" id="filter-search" placeholder="Search name or notes…">
-    <button class="secondary" id="btn-seed">Load example data</button>
-    <button class="secondary" id="btn-clear">Clear all</button>
   </div>
 
-  <table>
-    <thead>
-      <tr>
-        <th>Name</th>
-        <th>Type</th>
-        <th>Deadline</th>
-        <th>Amount</th>
-        <th>Status</th>
-        <th>Notes</th>
-        <th></th>
-      </tr>
-    </thead>
-    <tbody id="rows"></tbody>
-  </table>
-  <div id="empty-state" style="display:none;">No opportunities yet. Add one, or ask your agent to.</div>
+  <div class="grid" id="grid"></div>
 
-  <div class="agent-note">
-    This page registers WebMCP tools when your browser supports them (Chrome with
-    <code>chrome://flags/#enable-webmcp-testing</code> enabled, or ChatGPT's in-app browser):
-    <code>add_opportunity</code>, <code>update_status</code>, <code>remove_opportunity</code>,
-    <code>get_deadlines</code>, <code>get_pipeline_summary</code>, <code>search_opportunities</code>.
-    All data lives only in this browser's local storage — nothing is sent anywhere.
+  <div class="log">
+    <h2>Activity</h2>
+    <div id="logList"></div>
   </div>
-</main>
 
-<footer>
-  MIT licensed. Built for <a href="https://webmcp.devpost.com">The WebMCP Challenge</a>.
-</footer>
+  <footer>
+    Everything lives in this browser's <code>localStorage</code> — no server,
+    no real subscriptions, no real money, no connection to any real account.
+    Brand names are illustrative example data only; this project is not
+    affiliated with or endorsed by any company named on this page. Six WebMCP
+    tools: <code>list_subscriptions</code>, <code>get_subscription</code>,
+    <code>search_subscriptions</code>, <code>get_savings_summary</code>,
+    <code>cancel_subscription</code>, <code>pause_subscription</code>.
+    MIT licensed.
+  </footer>
+</div>
 
-<dialog id="dialog-edit">
-  <form method="dialog" id="form-edit">
-    <h2 id="dialog-title">Add opportunity</h2>
-    <input type="hidden" id="f-id">
-    <label for="f-name">Name</label>
-    <input type="text" id="f-name" required placeholder="e.g. Manifund AI Safety Regranting">
-    <label for="f-url">Link</label>
-    <input type="text" id="f-url" placeholder="https://…">
-    <label for="f-type">Type</label>
-    <select id="f-type">
-      <option value="grant">Grant</option>
-      <option value="hackathon">Hackathon</option>
-      <option value="freelance">Freelance</option>
-      <option value="other">Other</option>
-    </select>
-    <label for="f-deadline">Deadline</label>
-    <input type="date" id="f-deadline">
-    <label for="f-amount">Amount (optional, numeric)</label>
-    <input type="text" id="f-amount" placeholder="e.g. 5000">
-    <label for="f-status">Status</label>
-    <select id="f-status">
-      <option value="spotted">Spotted</option>
-      <option value="in_progress">In progress</option>
-      <option value="submitted">Submitted</option>
-      <option value="won">Won</option>
-      <option value="rejected">Rejected</option>
-    </select>
-    <label for="f-notes">Notes</label>
-    <textarea id="f-notes" placeholder="Anything worth remembering"></textarea>
-    <div class="dialog-actions">
-      <button value="cancel">Cancel</button>
-      <button value="save" id="btn-save">Save</button>
-    </div>
-  </form>
-</dialog>
+<div class="overlay" id="overlay" style="display:none;">
+  <div class="modal" id="modalBody"></div>
+</div>
 
 <script>
-// ---------------------------------------------------------------------------
-// Cash Pipeline — WebMCP Challenge entry.
-//
-// Everything lives in localStorage under STORAGE_KEY. Two things read and
-// write that same store: the human UI below (table + dialog), and the WebMCP
-// tools further down. Neither is a special case of the other — both call the
-// same load()/save()/render() functions, which is the whole point of the
-// challenge brief ("an app that becomes meaningfully better when people and
-// their agents can use it together"): whichever one acts, the other sees the
-// result immediately, on the same page.
-// ---------------------------------------------------------------------------
+(function () {
+  "use strict";
 
-const STORAGE_KEY = 'cash-pipeline-v1';
-const STATUSES = ['spotted', 'in_progress', 'submitted', 'won', 'rejected'];
+  var STORAGE_KEY = "roach_motel_exit_v1";
 
-function load() {
-  try {
-    const raw = localStorage.getItem(STORAGE_KEY);
-    const parsed = raw ? JSON.parse(raw) : [];
-    return Array.isArray(parsed) ? parsed : [];
-  } catch (e) {
-    console.warn('Cash Pipeline: could not read localStorage, starting empty.', e);
-    return [];
+  var SEED = [
+    { id: "netflix", name: "Netflix", category: "Streaming", price: 17.99, renewalDate: addDays(9), usage: "used", lastActive: "today", status: "active" },
+    { id: "spotify", name: "Spotify Premium", category: "Music", price: 11.99, renewalDate: addDays(14), usage: "used", lastActive: "today", status: "active" },
+    { id: "claudepro", name: "Claude Pro", category: "AI Tools", price: 20.00, renewalDate: addDays(6), usage: "used", lastActive: "today", status: "active" },
+    { id: "amazonprime", name: "Amazon Prime", category: "Shopping", price: 14.99, renewalDate: addDays(4), usage: "unused", lastActive: "45 days ago", status: "active" },
+    { id: "adobecc", name: "Adobe Creative Cloud", category: "Software", price: 59.99, renewalDate: addDays(21), usage: "unused", lastActive: "70 days ago", status: "active" },
+    { id: "psplus", name: "PlayStation Plus", category: "Gaming", price: 17.99, renewalDate: addDays(2), usage: "unused", lastActive: "95 days ago", status: "active" }
+  ];
+
+  function addDays(n) {
+    var d = new Date();
+    d.setDate(d.getDate() + n);
+    return d.toISOString().slice(0, 10);
   }
-}
 
-function save(items) {
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(items));
-}
+  function todayISO() {
+    return new Date().toISOString().slice(0, 10);
+  }
 
-function uid() {
-  return 'op_' + Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
-}
-
-function daysUntil(dateStr) {
-  if (!dateStr) return null;
-  const target = new Date(dateStr + 'T23:59:59');
-  if (isNaN(target.getTime())) return null;
-  const now = new Date();
-  return Math.ceil((target - now) / 86400000);
-}
-
-function escapeHtml(s) {
-  return String(s == null ? '' : s).replace(/[&<>"']/g, (c) => ({
-    '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;',
-  }[c]));
-}
-
-// ---------------------------------------------------------------------------
-// Rendering — the single source of truth both the human UI and the WebMCP
-// tools funnel through after every mutation.
-// ---------------------------------------------------------------------------
-
-function render() {
-  const items = load();
-  renderSummary(items);
-  renderRows(items);
-}
-
-function renderSummary(items) {
-  const el = document.getElementById('summary-cards');
-  const byStatus = {};
-  for (const s of STATUSES) byStatus[s] = 0;
-  let totalOpenAmount = 0;
-  let nearest = null;
-  for (const it of items) {
-    if (byStatus[it.status] !== undefined) byStatus[it.status]++;
-    const amt = Number(it.amount);
-    if (!isNaN(amt) && it.status !== 'rejected' && it.status !== 'won') totalOpenAmount += amt;
-    const d = daysUntil(it.deadline);
-    if (d !== null && (it.status === 'spotted' || it.status === 'in_progress')) {
-      if (nearest === null || d < nearest.days) nearest = { days: d, name: it.name };
+  function load() {
+    try {
+      var raw = localStorage.getItem(STORAGE_KEY);
+      if (!raw) return { subs: clone(SEED), log: [] };
+      var parsed = JSON.parse(raw);
+      if (!parsed.subs) return { subs: clone(SEED), log: [] };
+      return parsed;
+    } catch (e) {
+      return { subs: clone(SEED), log: [] };
     }
   }
-  const cards = [
-    { label: 'Open leads', value: byStatus.spotted + byStatus.in_progress },
-    { label: 'Submitted', value: byStatus.submitted },
-    { label: 'Won', value: byStatus.won },
-    { label: 'Potential cash (open)', value: totalOpenAmount ? totalOpenAmount.toLocaleString() : '—' },
-    { label: 'Nearest deadline', value: nearest ? `${nearest.days}d — ${nearest.name}` : '—' },
-  ];
-  el.innerHTML = cards.map((c) => `
-    <div class="card">
-      <div class="label">${escapeHtml(c.label)}</div>
-      <div class="value">${escapeHtml(String(c.value))}</div>
-    </div>`).join('');
-}
 
-function renderRows(allItems) {
-  const statusFilter = document.getElementById('filter-status').value;
-  const typeFilter = document.getElementById('filter-type').value;
-  const search = document.getElementById('filter-search').value.trim().toLowerCase();
-
-  let items = allItems.slice().sort((a, b) => {
-    const da = daysUntil(a.deadline), db = daysUntil(b.deadline);
-    if (da === null && db === null) return 0;
-    if (da === null) return 1;
-    if (db === null) return -1;
-    return da - db;
-  });
-
-  if (statusFilter) items = items.filter((i) => i.status === statusFilter);
-  if (typeFilter) items = items.filter((i) => i.type === typeFilter);
-  if (search) items = items.filter((i) =>
-    (i.name || '').toLowerCase().includes(search) ||
-    (i.notes || '').toLowerCase().includes(search));
-
-  const tbody = document.getElementById('rows');
-  const emptyState = document.getElementById('empty-state');
-
-  if (items.length === 0) {
-    tbody.innerHTML = '';
-    emptyState.style.display = 'block';
-    return;
+  function save() {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
   }
-  emptyState.style.display = 'none';
 
-  tbody.innerHTML = items.map((it) => {
-    const d = daysUntil(it.deadline);
-    let deadlineHtml = '<span class="deadline-none">—</span>';
-    if (d !== null) {
-      const cls = d < 0 ? 'deadline-urgent' : d <= 3 ? 'deadline-urgent' : d <= 7 ? 'deadline-soon' : '';
-      const label = d < 0 ? `overdue by ${-d}d` : d === 0 ? 'today' : `in ${d}d`;
-      deadlineHtml = `<span class="${cls}">${escapeHtml(it.deadline)} (${label})</span>`;
+  function clone(x) { return JSON.parse(JSON.stringify(x)); }
+
+  var state = load();
+
+  function findSub(idOrName) {
+    if (!idOrName) return null;
+    var q = String(idOrName).trim().toLowerCase();
+    return state.subs.find(function (s) {
+      return s.id.toLowerCase() === q || s.name.toLowerCase() === q;
+    }) || state.subs.find(function (s) {
+      return s.name.toLowerCase().indexOf(q) !== -1;
+    }) || null;
+  }
+
+  function addLog(who, text) {
+    state.log.unshift({ who: who, text: text, at: new Date().toISOString() });
+    state.log = state.log.slice(0, 40);
+  }
+
+  function money(n) {
+    return "$" + n.toFixed(2);
+  }
+
+  // ---------- rendering ----------
+
+  function render() {
+    renderSummary();
+    renderGrid();
+    renderLog();
+  }
+
+  function renderSummary() {
+    var summary = computeSavingsSummary();
+    var el = document.getElementById("summary");
+    el.innerHTML =
+      statCard("Monthly spend", money(summary.monthlyTotal), "") +
+      statCard("Unused, still billed", money(summary.unusedMonthlyTotal), summary.unusedMonthlyTotal > 0 ? "warn" : "") +
+      statCard("Active subscriptions", String(summary.activeCount), "") +
+      statCard("If you canceled the unused ones", money(summary.potentialAnnualSavings) + "/yr", summary.potentialAnnualSavings > 0 ? "good" : "");
+  }
+
+  function statCard(label, value, cls) {
+    return '<div class="stat-card ' + (cls || "") + '">' +
+      '<div class="label">' + escapeHtml(label) + '</div>' +
+      '<div class="value">' + escapeHtml(value) + '</div>' +
+      '</div>';
+  }
+
+  function renderGrid() {
+    var q = document.getElementById("searchInput").value.trim().toLowerCase();
+    var statusFilter = document.getElementById("statusFilter").value;
+    var el = document.getElementById("grid");
+
+    var subs = state.subs.filter(function (s) {
+      var matchesQ = !q || s.name.toLowerCase().indexOf(q) !== -1 || s.category.toLowerCase().indexOf(q) !== -1;
+      var matchesStatus = !statusFilter || s.status === statusFilter;
+      return matchesQ && matchesStatus;
+    });
+
+    if (subs.length === 0) {
+      el.innerHTML = '<p style="color: var(--muted);">No subscriptions match.</p>';
+      return;
     }
-    const nameHtml = it.url
-      ? `<a href="${escapeHtml(it.url)}" target="_blank" rel="noopener">${escapeHtml(it.name)}</a>`
-      : escapeHtml(it.name);
-    return `
-      <tr data-id="${escapeHtml(it.id)}">
-        <td class="name">${nameHtml}</td>
-        <td>${escapeHtml(it.type || 'other')}</td>
-        <td>${deadlineHtml}</td>
-        <td>${it.amount ? escapeHtml(String(it.amount)) : '—'}</td>
-        <td><span class="badge badge-${escapeHtml(it.status)}">${escapeHtml((it.status || '').replace('_', ' '))}</span></td>
-        <td class="notes">${escapeHtml(it.notes || '')}</td>
-        <td class="row-actions">
-          <button data-action="edit">Edit</button>
-          <button data-action="delete">Delete</button>
-        </td>
-      </tr>`;
-  }).join('');
-}
 
-// ---------------------------------------------------------------------------
-// Human UI — dialog, filters, seed/clear buttons.
-// ---------------------------------------------------------------------------
+    el.innerHTML = subs.map(renderCard).join("");
 
-const dialog = document.getElementById('dialog-edit');
-const form = document.getElementById('form-edit');
-
-function openDialogFor(item) {
-  document.getElementById('dialog-title').textContent = item ? 'Edit opportunity' : 'Add opportunity';
-  document.getElementById('f-id').value = item ? item.id : '';
-  document.getElementById('f-name').value = item ? item.name || '' : '';
-  document.getElementById('f-url').value = item ? item.url || '' : '';
-  document.getElementById('f-type').value = item ? item.type || 'grant' : 'grant';
-  document.getElementById('f-deadline').value = item ? item.deadline || '' : '';
-  document.getElementById('f-amount').value = item ? item.amount || '' : '';
-  document.getElementById('f-status').value = item ? item.status || 'spotted' : 'spotted';
-  document.getElementById('f-notes').value = item ? item.notes || '' : '';
-  dialog.showModal();
-}
-
-document.getElementById('btn-add').addEventListener('click', () => openDialogFor(null));
-
-document.getElementById('rows').addEventListener('click', (e) => {
-  const btn = e.target.closest('button[data-action]');
-  if (!btn) return;
-  const tr = btn.closest('tr');
-  const id = tr.getAttribute('data-id');
-  const items = load();
-  const item = items.find((i) => i.id === id);
-  if (btn.dataset.action === 'edit') {
-    openDialogFor(item);
-  } else if (btn.dataset.action === 'delete') {
-    save(items.filter((i) => i.id !== id));
-    render();
-  }
-});
-
-dialog.addEventListener('close', () => {
-  if (dialog.returnValue !== 'save') return;
-  const id = document.getElementById('f-id').value;
-  const items = load();
-  const record = {
-    id: id || uid(),
-    name: document.getElementById('f-name').value.trim(),
-    url: document.getElementById('f-url').value.trim(),
-    type: document.getElementById('f-type').value,
-    deadline: document.getElementById('f-deadline').value,
-    amount: document.getElementById('f-amount').value.trim(),
-    status: document.getElementById('f-status').value,
-    notes: document.getElementById('f-notes').value.trim(),
-  };
-  if (!record.name) return;
-  const idx = items.findIndex((i) => i.id === record.id);
-  if (idx >= 0) items[idx] = record; else items.push(record);
-  save(items);
-  render();
-});
-
-['filter-status', 'filter-type'].forEach((id) =>
-  document.getElementById(id).addEventListener('change', render));
-document.getElementById('filter-search').addEventListener('input', render);
-
-document.getElementById('btn-clear').addEventListener('click', () => {
-  if (!confirm('Delete all opportunities?')) return;
-  save([]);
-  render();
-});
-
-document.getElementById('btn-seed').addEventListener('click', () => {
-  const items = load();
-  const examples = [
-    { id: uid(), name: 'Manifund AI Safety Regranting', url: 'https://manifund.org', type: 'grant', deadline: '', amount: '20000', status: 'spotted', notes: 'Rolling, public proposal required.' },
-    { id: uid(), name: 'AssemblyAI Hackathon', url: 'https://lablab.ai/ai-hackathons/assemblyai-voice-agent-hackathon', type: 'hackathon', deadline: '2026-09-30', amount: '5000', status: 'spotted', notes: 'Voice agent, month-long build.' },
-    { id: uid(), name: 'DevNetwork API+Cloud+AI Hackathon', url: 'https://api-cloud-ai-hackathon-2026.devpost.com', type: 'hackathon', deadline: '2026-09-03', amount: '12500', status: 'in_progress', notes: 'Overall track, submitting existing project.' },
-  ];
-  save(items.concat(examples));
-  render();
-});
-
-// ---------------------------------------------------------------------------
-// WebMCP tools — the agent side of the same board.
-//
-// Deliberately NOT gated behind window/document existing in a special way:
-// this file has no test harness pretending to be a browser (unlike a page
-// that ships with its own node-based test suite), so a plain feature check
-// on `document.modelContext` is enough here. Every tool below calls the same
-// load()/save()/render() as the human UI, so an agent's action shows up on
-// screen immediately, and a human's edit is what the agent reads back next
-// time it calls a tool — one shared board, not two copies of the data.
-// ---------------------------------------------------------------------------
-
-function registerWebMcpTools() {
-  if (typeof document === 'undefined' || !document.modelContext || !document.modelContext.registerTool) {
-    return;
+    subs.forEach(function (s) {
+      var btn = document.getElementById("cancel-" + s.id);
+      if (btn) btn.addEventListener("click", function () { openCancelMaze(s.id); });
+      var pauseBtn = document.getElementById("pause-" + s.id);
+      if (pauseBtn) pauseBtn.addEventListener("click", function () { pauseSubscription({ id_or_name: s.id }); render(); });
+    });
   }
 
-  const statusEnum = STATUSES;
-  const typeEnum = ['grant', 'hackathon', 'freelance', 'other'];
+  function renderCard(s) {
+    var isCanceled = s.status === "canceled";
+    var usageBadge = s.usage === "unused"
+      ? '<span class="badge unused">Unused · ' + escapeHtml(s.lastActive) + '</span>'
+      : '<span class="badge used">Active use · ' + escapeHtml(s.lastActive) + '</span>';
 
-  document.modelContext.registerTool({
-    name: 'add_opportunity',
-    description: 'Add a new cash opportunity (grant, hackathon or freelance lead) to the board. Shows up immediately in the visible table.',
-    inputSchema: {
-      type: 'object',
-      properties: {
-        name: { type: 'string', description: 'Short name of the opportunity.' },
-        url: { type: 'string', description: 'Link to the opportunity, if any.' },
-        type: { type: 'string', enum: typeEnum },
-        deadline: { type: 'string', description: 'ISO date (YYYY-MM-DD) if there is a deadline. Omit if rolling / no deadline.' },
-        amount: { type: 'string', description: 'Numeric amount as a string, e.g. "5000". Omit if unknown.' },
-        status: { type: 'string', enum: statusEnum, description: 'Defaults to "spotted".' },
-        notes: { type: 'string' },
-      },
-      required: ['name'],
-    },
-    annotations: { readOnlyHint: false, untrustedContentHint: false },
-    execute: async (input) => {
-      const items = load();
-      const record = {
-        id: uid(),
-        name: String(input.name || '').trim(),
-        url: (input.url || '').trim(),
-        type: typeEnum.includes(input.type) ? input.type : 'other',
-        deadline: input.deadline || '',
-        amount: (input.amount || '').toString().trim(),
-        status: statusEnum.includes(input.status) ? input.status : 'spotted',
-        notes: input.notes || '',
-      };
-      if (!record.name) return 'Refused: an opportunity needs a name.';
-      items.push(record);
-      save(items);
-      render();
-      return `Added "${record.name}" (id ${record.id}, status ${record.status}).`;
-    },
-  });
+    var statusBadge = '<span class="badge ' + s.status + '">' + s.status + '</span>';
 
-  document.modelContext.registerTool({
-    name: 'update_status',
-    description: 'Update the status of an existing opportunity, matched by id or by exact/partial name.',
-    inputSchema: {
-      type: 'object',
-      properties: {
-        id: { type: 'string' },
-        name: { type: 'string', description: 'Used if id is not provided; matches case-insensitively, partial match allowed.' },
-        status: { type: 'string', enum: statusEnum },
-      },
-      required: ['status'],
-    },
-    annotations: { readOnlyHint: false, untrustedContentHint: false },
-    execute: async ({ id, name, status }) => {
-      if (!statusEnum.includes(status)) return `Refused: status must be one of ${statusEnum.join(', ')}.`;
-      const items = load();
-      let item = id ? items.find((i) => i.id === id) : null;
-      if (!item && name) {
-        const q = name.toLowerCase();
-        item = items.find((i) => i.name.toLowerCase() === q) ||
-               items.find((i) => i.name.toLowerCase().includes(q));
-      }
-      if (!item) return `No matching opportunity found for ${id ? 'id ' + id : 'name "' + name + '"'}.`;
-      item.status = status;
-      save(items);
-      render();
-      return `"${item.name}" is now "${status}".`;
-    },
-  });
+    var actions = isCanceled
+      ? '<div class="card-actions"><button disabled>Canceled</button></div>'
+      : '<div class="card-actions">' +
+        '<button class="cancel-btn" id="cancel-' + s.id + '">Cancel</button>' +
+        (s.status === "active" ? '<button id="pause-' + s.id + '">Pause</button>' : '') +
+        '</div>';
 
-  document.modelContext.registerTool({
-    name: 'remove_opportunity',
-    description: 'Remove an opportunity from the board, matched by id or by exact/partial name.',
-    inputSchema: {
-      type: 'object',
-      properties: {
-        id: { type: 'string' },
-        name: { type: 'string' },
-      },
-    },
-    annotations: { readOnlyHint: false, untrustedContentHint: false },
-    execute: async ({ id, name }) => {
-      const items = load();
-      let item = id ? items.find((i) => i.id === id) : null;
-      if (!item && name) {
-        const q = name.toLowerCase();
-        item = items.find((i) => i.name.toLowerCase().includes(q));
-      }
-      if (!item) return 'No matching opportunity found.';
-      save(items.filter((i) => i.id !== item.id));
-      render();
-      return `Removed "${item.name}".`;
-    },
-  });
+    return '<div class="card ' + (isCanceled ? "canceled" : "") + '">' +
+      '<div class="row-top">' +
+        '<div><div class="name">' + escapeHtml(s.name) + '</div><div class="category">' + escapeHtml(s.category) + '</div></div>' +
+        '<div class="price">' + money(s.price) + '<span> /mo</span></div>' +
+      '</div>' +
+      '<div>' + statusBadge + ' ' + usageBadge + '</div>' +
+      '<div class="meta">' + (isCanceled ? "Canceled" : "Renews") + ' ' + escapeHtml(s.renewalDate) + '</div>' +
+      actions +
+      '</div>';
+  }
 
-  document.modelContext.registerTool({
-    name: 'get_deadlines',
-    description: 'List open opportunities (status spotted or in_progress) sorted by nearest deadline first. Items with no deadline are listed last.',
-    inputSchema: { type: 'object', properties: {} },
-    annotations: { readOnlyHint: true, untrustedContentHint: false },
-    execute: async () => {
-      const items = load().filter((i) => i.status === 'spotted' || i.status === 'in_progress');
-      items.sort((a, b) => {
-        const da = daysUntil(a.deadline), db = daysUntil(b.deadline);
-        if (da === null && db === null) return 0;
-        if (da === null) return 1;
-        if (db === null) return -1;
-        return da - db;
+  function renderLog() {
+    var el = document.getElementById("logList");
+    if (state.log.length === 0) {
+      el.innerHTML = '<div class="log-entry">Nothing yet. Cancel something by hand, or have an agent do it.</div>';
+      return;
+    }
+    el.innerHTML = state.log.map(function (entry) {
+      return '<div class="log-entry"><span class="who ' + (entry.who === "agent" ? "agent" : "") + '">' +
+        (entry.who === "agent" ? "Agent" : "You") + '</span> — ' + escapeHtml(entry.text) + '</div>';
+    }).join("");
+  }
+
+  function escapeHtml(str) {
+    return String(str).replace(/[&<>"']/g, function (c) {
+      return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c];
+    });
+  }
+
+  // ---------- the deliberate human maze ----------
+  // Mirrors real "Roach Motel" cancellation flows: a retention offer, a guilt
+  // step, and a mandatory reason before the cancellation is honored. An agent
+  // calling cancel_subscription skips all three because the tool is the real
+  // exit, not a UI element that can be buried.
+
+  var mazeState = null;
+
+  function openCancelMaze(id) {
+    var sub = findSub(id);
+    if (!sub) return;
+    mazeState = { id: id, step: 1 };
+    renderMaze();
+  }
+
+  function closeMaze() {
+    mazeState = null;
+    document.getElementById("overlay").style.display = "none";
+  }
+
+  function renderMaze() {
+    var overlay = document.getElementById("overlay");
+    var body = document.getElementById("modalBody");
+    if (!mazeState) { overlay.style.display = "none"; return; }
+    overlay.style.display = "flex";
+    var sub = findSub(mazeState.id);
+    if (!sub) { closeMaze(); return; }
+
+    if (mazeState.step === 1) {
+      body.innerHTML =
+        '<div class="step-indicator">Step 1 of 3</div>' +
+        '<h3>Wait — before you go</h3>' +
+        '<p>Here\'s 50% off ' + escapeHtml(sub.name) + ' for the next 3 months. Most people who see this offer stay.</p>' +
+        '<div class="modal-actions">' +
+          '<button class="btn-primary" id="mazeKeep">Keep my discount</button>' +
+          '<button class="btn-danger-link" id="mazeNext">No thanks, continue to cancel</button>' +
+        '</div>';
+      document.getElementById("mazeKeep").onclick = closeMaze;
+      document.getElementById("mazeNext").onclick = function () { mazeState.step = 2; renderMaze(); };
+    } else if (mazeState.step === 2) {
+      body.innerHTML =
+        '<div class="step-indicator">Step 2 of 3</div>' +
+        '<h3>Are you sure?</h3>' +
+        '<p>You\'ll lose access to ' + escapeHtml(sub.name) + ' immediately and lose your saved data.</p>' +
+        '<div class="modal-actions">' +
+          '<button class="btn-primary" id="mazeNevermind">Never mind, keep it</button>' +
+          '<button class="btn-danger-link" id="mazeNext2">Yes, I\'m sure</button>' +
+        '</div>';
+      document.getElementById("mazeNevermind").onclick = closeMaze;
+      document.getElementById("mazeNext2").onclick = function () { mazeState.step = 3; renderMaze(); };
+    } else {
+      body.innerHTML =
+        '<div class="step-indicator">Step 3 of 3</div>' +
+        '<h3>Tell us why you\'re leaving</h3>' +
+        '<p>Required before we can process your cancellation.</p>' +
+        '<textarea id="mazeReason" placeholder="Your reason…"></textarea>' +
+        '<div class="modal-actions">' +
+          '<button class="btn-primary" id="mazeSubmit" disabled>Submit and cancel</button>' +
+          '<button class="btn-danger-link" id="mazeBack">Back</button>' +
+        '</div>';
+      var textarea = document.getElementById("mazeReason");
+      var submitBtn = document.getElementById("mazeSubmit");
+      textarea.addEventListener("input", function () {
+        submitBtn.disabled = textarea.value.trim().length === 0;
       });
-      return JSON.stringify(items.map((i) => ({
-        name: i.name, deadline: i.deadline || null,
-        days_left: daysUntil(i.deadline), status: i.status, type: i.type,
-      })));
-    },
-  });
+      submitBtn.onclick = function () {
+        cancelSubscription({ id_or_name: mazeState.id, reason: textarea.value.trim() }, "you");
+        closeMaze();
+        render();
+      };
+      document.getElementById("mazeBack").onclick = closeMaze;
+    }
+  }
 
-  document.modelContext.registerTool({
-    name: 'get_pipeline_summary',
-    description: 'Counts of opportunities by status, total potential cash still open (not won or rejected), and the single nearest deadline.',
-    inputSchema: { type: 'object', properties: {} },
-    annotations: { readOnlyHint: true, untrustedContentHint: false },
-    execute: async () => {
-      const items = load();
-      const byStatus = {};
-      for (const s of statusEnum) byStatus[s] = 0;
-      let totalOpenAmount = 0;
-      let nearest = null;
-      for (const it of items) {
-        if (byStatus[it.status] !== undefined) byStatus[it.status]++;
-        const amt = Number(it.amount);
-        if (!isNaN(amt) && it.status !== 'rejected' && it.status !== 'won') totalOpenAmount += amt;
-        const d = daysUntil(it.deadline);
-        if (d !== null && (it.status === 'spotted' || it.status === 'in_progress')) {
-          if (nearest === null || d < nearest.days) nearest = { days: d, name: it.name };
+  // ---------- core actions (shared by human UI and WebMCP tools) ----------
+
+  function listSubscriptions(args) {
+    args = args || {};
+    var subs = state.subs;
+    if (args.status) subs = subs.filter(function (s) { return s.status === args.status; });
+    return subs;
+  }
+
+  function getSubscription(args) {
+    var sub = findSub(args && args.id_or_name);
+    return sub || null;
+  }
+
+  function searchSubscriptions(args) {
+    args = args || {};
+    var q = (args.query || "").toLowerCase();
+    return state.subs.filter(function (s) {
+      var matchesQ = !q ||
+        s.name.toLowerCase().indexOf(q) !== -1 ||
+        s.category.toLowerCase().indexOf(q) !== -1;
+      var matchesCategory = !args.category || s.category.toLowerCase() === String(args.category).toLowerCase();
+      var matchesStatus = !args.status || s.status === args.status;
+      return matchesQ && matchesCategory && matchesStatus;
+    });
+  }
+
+  function round2(n) { return Math.round(n * 100) / 100; }
+
+  function computeSavingsSummary() {
+    var active = state.subs.filter(function (s) { return s.status !== "canceled"; });
+    var monthlyTotal = active.reduce(function (sum, s) { return sum + s.price; }, 0);
+    var unused = active.filter(function (s) { return s.usage === "unused"; });
+    var unusedMonthlyTotal = unused.reduce(function (sum, s) { return sum + s.price; }, 0);
+    return {
+      monthlyTotal: round2(monthlyTotal),
+      unusedMonthlyTotal: round2(unusedMonthlyTotal),
+      unusedCount: unused.length,
+      activeCount: active.filter(function (s) { return s.status === "active"; }).length,
+      potentialAnnualSavings: round2(unusedMonthlyTotal * 12)
+    };
+  }
+
+  function cancelSubscription(args, who) {
+    var sub = findSub(args && args.id_or_name);
+    if (!sub) return { error: "No subscription matches '" + (args && args.id_or_name) + "'." };
+    if (sub.status === "canceled") return { error: sub.name + " is already canceled." };
+    sub.status = "canceled";
+    sub.canceledAt = todayISO();
+    addLog(who || "agent", "canceled " + sub.name +
+      (args && args.reason ? ' — reason: "' + args.reason + '"' : ""));
+    save();
+    return { subscription: sub, message: sub.name + " canceled, effective immediately. No retention offer, no maze." };
+  }
+
+  function pauseSubscription(args, who) {
+    var sub = findSub(args && args.id_or_name);
+    if (!sub) return { error: "No subscription matches '" + (args && args.id_or_name) + "'." };
+    if (sub.status !== "active") return { error: sub.name + " isn't active, so it can't be paused." };
+    sub.status = "paused";
+    sub.resumeInDays = args && args.resume_in_days ? args.resume_in_days : 30;
+    addLog(who || "agent", "paused " + sub.name + " (resumes in " + sub.resumeInDays + " days)");
+    save();
+    return { subscription: sub, message: sub.name + " paused for " + sub.resumeInDays + " days." };
+  }
+
+  // expose actions used by human UI directly (bypassing the "who" default of agent)
+  window.__roachDemo = { cancelSubscription: cancelSubscription, pauseSubscription: pauseSubscription };
+
+  // ---------- WebMCP tool registration ----------
+
+  function registerTools() {
+    if (!window.document || !document.modelContext || typeof document.modelContext.registerTool !== "function") {
+      return;
+    }
+
+    document.modelContext.registerTool({
+      name: "list_subscriptions",
+      description: "List all subscriptions, optionally filtered by status (active, paused, canceled).",
+      inputSchema: {
+        type: "object",
+        properties: {
+          status: { type: "string", enum: ["active", "paused", "canceled"], description: "Filter by status. Omit to list all." }
         }
-      }
-      return JSON.stringify({ by_status: byStatus, total_open_amount: totalOpenAmount, nearest_deadline: nearest });
-    },
-  });
-
-  document.modelContext.registerTool({
-    name: 'search_opportunities',
-    description: 'Search opportunities by a text query against name and notes, optionally filtered by type or status.',
-    inputSchema: {
-      type: 'object',
-      properties: {
-        query: { type: 'string' },
-        type: { type: 'string', enum: typeEnum },
-        status: { type: 'string', enum: statusEnum },
       },
-    },
-    annotations: { readOnlyHint: true, untrustedContentHint: false },
-    execute: async ({ query, type, status }) => {
-      let items = load();
-      if (type) items = items.filter((i) => i.type === type);
-      if (status) items = items.filter((i) => i.status === status);
-      if (query) {
-        const q = query.toLowerCase();
-        items = items.filter((i) =>
-          (i.name || '').toLowerCase().includes(q) ||
-          (i.notes || '').toLowerCase().includes(q));
+      async execute(args) {
+        var subs = listSubscriptions(args);
+        return { content: [{ type: "text", text: JSON.stringify(subs, null, 2) }] };
       }
-      return JSON.stringify(items);
-    },
+    });
+
+    document.modelContext.registerTool({
+      name: "get_subscription",
+      description: "Get full details for one subscription, matched by id or name.",
+      inputSchema: {
+        type: "object",
+        properties: {
+          id_or_name: { type: "string", description: "Subscription id or name, e.g. 'gympro' or 'GymPro'." }
+        },
+        required: ["id_or_name"]
+      },
+      async execute(args) {
+        var sub = getSubscription(args);
+        if (!sub) return { content: [{ type: "text", text: "No subscription found for '" + args.id_or_name + "'." }], isError: true };
+        return { content: [{ type: "text", text: JSON.stringify(sub, null, 2) }] };
+      }
+    });
+
+    document.modelContext.registerTool({
+      name: "search_subscriptions",
+      description: "Search subscriptions by free text, category, or status.",
+      inputSchema: {
+        type: "object",
+        properties: {
+          query: { type: "string", description: "Free-text match against name and category." },
+          category: { type: "string", description: "Exact category, e.g. 'Streaming', 'Fitness'." },
+          status: { type: "string", enum: ["active", "paused", "canceled"] }
+        }
+      },
+      async execute(args) {
+        var subs = searchSubscriptions(args);
+        return { content: [{ type: "text", text: JSON.stringify(subs, null, 2) }] };
+      }
+    });
+
+    document.modelContext.registerTool({
+      name: "get_savings_summary",
+      description: "Get total monthly spend, spend on subscriptions unused for 30+ days, and potential annual savings if those were canceled.",
+      inputSchema: { type: "object", properties: {} },
+      async execute() {
+        var summary = computeSavingsSummary();
+        return { content: [{ type: "text", text: JSON.stringify(summary, null, 2) }] };
+      }
+    });
+
+    document.modelContext.registerTool({
+      name: "cancel_subscription",
+      description: "Cancel a subscription immediately, matched by id or name. Skips any retention flow — this is the real, honest cancel action, not a UI element that can be hidden.",
+      inputSchema: {
+        type: "object",
+        properties: {
+          id_or_name: { type: "string", description: "Subscription id or name to cancel." },
+          reason: { type: "string", description: "Optional reason for canceling." }
+        },
+        required: ["id_or_name"]
+      },
+      async execute(args) {
+        var result = cancelSubscription(args, "agent");
+        render();
+        if (result.error) return { content: [{ type: "text", text: result.error }], isError: true };
+        return { content: [{ type: "text", text: result.message }] };
+      }
+    });
+
+    document.modelContext.registerTool({
+      name: "pause_subscription",
+      description: "Pause an active subscription instead of canceling it outright, matched by id or name.",
+      inputSchema: {
+        type: "object",
+        properties: {
+          id_or_name: { type: "string", description: "Subscription id or name to pause." },
+          resume_in_days: { type: "number", description: "Days until the subscription should resume. Defaults to 30." }
+        },
+        required: ["id_or_name"]
+      },
+      async execute(args) {
+        var result = pauseSubscription(args, "agent");
+        render();
+        if (result.error) return { content: [{ type: "text", text: result.error }], isError: true };
+        return { content: [{ type: "text", text: result.message }] };
+      }
+    });
+  }
+
+  // ---------- wire up ----------
+
+  document.getElementById("searchInput").addEventListener("input", renderGrid);
+  document.getElementById("statusFilter").addEventListener("change", renderGrid);
+  document.getElementById("overlay").addEventListener("click", function (e) {
+    if (e.target.id === "overlay") closeMaze();
   });
-}
 
-render();
-registerWebMcpTools();
-
-// Keep the page in sync if data changes in another tab (e.g. the agent runs
-// in a second tab against the same origin).
-window.addEventListener('storage', (e) => {
-  if (e.key === STORAGE_KEY) render();
-});
+  registerTools();
+  render();
+})();
 </script>
-
 </body>
 </html>
