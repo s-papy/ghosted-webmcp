@@ -362,7 +362,7 @@
       <div class="agent-transcript" id="agentTranscript"></div>
       <div class="agent-quick-prompts" id="agentQuickPrompts"></div>
       <div class="agent-input-row">
-        <input type="text" id="agentInput" placeholder="Type a request, or click one above…" />
+        <input type="text" id="agentInput" placeholder="Type a request, or click one above…" aria-label="Message the demo agent" />
         <button class="primary-ish" id="agentSendBtn">Send</button>
       </div>
     </div>
@@ -386,8 +386,8 @@
     </section>
 
     <div class="toolbar">
-      <input type="text" id="searchInput" placeholder="Search company or role…" />
-      <select id="statusFilter">
+      <input type="text" id="searchInput" placeholder="Search company or role…" aria-label="Search applications" />
+      <select id="statusFilter" aria-label="Filter applications by status">
         <option value="">All statuses</option>
         <option value="applied">Applied</option>
         <option value="interviewing">Interviewing</option>
@@ -416,8 +416,8 @@
     </section>
 
     <div class="toolbar">
-      <input type="text" id="invoiceSearchInput" placeholder="Search client or project…" />
-      <select id="invoiceStatusFilter">
+      <input type="text" id="invoiceSearchInput" placeholder="Search client or project…" aria-label="Search invoices" />
+      <select id="invoiceStatusFilter" aria-label="Filter invoices by status">
         <option value="">All statuses</option>
         <option value="sent">Sent</option>
         <option value="paid">Paid</option>
@@ -779,7 +779,7 @@
       '<div class="detail-header">' +
         '<div class="detail-avatar" style="background:' + entity.color + ';">' + entity.initial + '</div>' +
         '<div><div class="detail-name">' + escapeHtml(a.company) + '</div><div class="detail-sub">' + escapeHtml(a.role) + '</div></div>' +
-        '<button class="detail-close" id="detailCloseBtn">✕</button>' +
+        '<button class="detail-close" id="detailCloseBtn" aria-label="Close">✕</button>' +
       '</div>' +
       '<div class="detail-facts">' +
         '<div><div class="fact-label">Applied</div><div class="fact-value">' + escapeHtml(a.dateApplied) + '</div></div>' +
@@ -823,7 +823,7 @@
       '<div class="detail-header">' +
         '<div class="detail-avatar" style="background:' + entity.color + ';">' + entity.initial + '</div>' +
         '<div><div class="detail-name">' + escapeHtml(inv.client) + '</div><div class="detail-sub">' + escapeHtml(inv.project) + '</div></div>' +
-        '<button class="detail-close" id="detailCloseBtn">✕</button>' +
+        '<button class="detail-close" id="detailCloseBtn" aria-label="Close">✕</button>' +
       '</div>' +
       '<div class="detail-facts">' +
         '<div><div class="fact-label">Amount</div><div class="fact-value">' + money(inv.amount) + '</div></div>' +
@@ -1111,13 +1111,15 @@
 
   function logInvoice(args, who) {
     args = args || {};
-    if (!args.client || !args.project || !args.amount) return { error: "client, project, and amount are all required." };
+    if (!args.client || !args.project || args.amount === undefined || args.amount === null) return { error: "client, project, and amount are all required." };
+    var amountNum = Number(args.amount);
+    if (!isFinite(amountNum) || amountNum <= 0) return { error: "amount must be a positive number, got '" + args.amount + "'." };
     var sentDate = args.date_sent || todayISO();
     var inv = {
       id: slugify(args.client) + "-" + Date.now().toString(36).slice(-4),
       client: args.client,
       project: args.project,
-      amount: Number(args.amount),
+      amount: amountNum,
       dateSent: sentDate,
       dueDate: args.due_date || sentDate,
       status: "sent",
@@ -1403,7 +1405,7 @@
         properties: {
           client: { type: "string", description: "Client or company name." },
           project: { type: "string", description: "Short project description." },
-          amount: { type: "number", description: "Invoice amount in USD." },
+          amount: { type: "number", exclusiveMinimum: 0, description: "Invoice amount in USD. Must be greater than 0." },
           date_sent: { type: "string", description: "ISO date (YYYY-MM-DD). Defaults to today." },
           due_date: { type: "string", description: "ISO date the payment is due. Defaults to date_sent." }
         },
