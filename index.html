@@ -1044,7 +1044,11 @@
 
   function flagStaleApplications(args, who) {
     args = args || {};
-    var threshold = args.threshold_days || GHOST_THRESHOLD_DAYS;
+    var threshold = GHOST_THRESHOLD_DAYS;
+    if (args.threshold_days !== undefined && args.threshold_days !== null) {
+      threshold = Number(args.threshold_days);
+      if (!isFinite(threshold) || threshold <= 0) return { error: "threshold_days must be a positive number, got '" + args.threshold_days + "'." };
+    }
     var targets = state.apps.filter(function (a) {
       return a.status === "applied" && daysSince(a.dateApplied) >= threshold;
     });
@@ -1179,7 +1183,11 @@
 
   function flagStaleInvoices(args, who) {
     args = args || {};
-    var threshold = args.threshold_days || GHOST_THRESHOLD_DAYS;
+    var threshold = GHOST_THRESHOLD_DAYS;
+    if (args.threshold_days !== undefined && args.threshold_days !== null) {
+      threshold = Number(args.threshold_days);
+      if (!isFinite(threshold) || threshold <= 0) return { error: "threshold_days must be a positive number, got '" + args.threshold_days + "'." };
+    }
     var targets = state.invoices.filter(function (i) {
       return i.status === "sent" && daysOverdue(i) >= threshold;
     });
@@ -1375,11 +1383,12 @@
       description: "Mark every 'applied' application with no response for threshold_days (default 21) as ghosted, in one call, instead of checking each one by hand.",
       inputSchema: {
         type: "object",
-        properties: { threshold_days: { type: "number", description: "Days of silence before flagging. Defaults to 21." } }
+        properties: { threshold_days: { type: "number", exclusiveMinimum: 0, description: "Days of silence before flagging. Defaults to 21." } }
       },
       async execute(args) {
         var result = flagStaleApplications(args, "agent");
         render();
+        if (result.error) return { content: [{ type: "text", text: result.error }], isError: true };
         return { content: [{ type: "text", text: JSON.stringify(result, null, 2) }] };
       }
     });
@@ -1500,11 +1509,12 @@
       description: "Mark every 'sent' invoice overdue by threshold_days (default 21) as ghosted, in one call, instead of checking each due date by hand.",
       inputSchema: {
         type: "object",
-        properties: { threshold_days: { type: "number", description: "Days overdue before flagging. Defaults to 21." } }
+        properties: { threshold_days: { type: "number", exclusiveMinimum: 0, description: "Days overdue before flagging. Defaults to 21." } }
       },
       async execute(args) {
         var result = flagStaleInvoices(args, "agent");
         renderInvoices();
+        if (result.error) return { content: [{ type: "text", text: result.error }], isError: true };
         return { content: [{ type: "text", text: JSON.stringify(result, null, 2) }] };
       }
     });
