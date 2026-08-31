@@ -1691,7 +1691,7 @@
       var days = daysMatch ? parseInt(daysMatch[1], 10) : 14;
       var result = logInvoice({ client: client, project: "logged via chat demo", amount: amount, due_date: daysAgo(-days) }, "agent");
       trace = 'log_invoice({ client: "' + client + '", amount: ' + amount + ', due_date: "+' + days + 'd" })';
-      reply = result.message + " Switch to the Freelance invoices tab to see it.";
+      reply = result.error ? "That didn't work: " + result.error : result.message + " Switch to the Freelance invoices tab to see it.";
     } else if (lower.indexOf("invoice") !== -1 && /stale|ghost|silent/.test(lower)) {
       var rInv = flagStaleInvoices({}, "agent");
       trace = "flag_stale_invoices()";
