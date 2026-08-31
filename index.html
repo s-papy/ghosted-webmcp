@@ -707,6 +707,10 @@
           if (e.target.tagName === "SELECT" || e.target.tagName === "OPTION") return;
           openJobDetail(a.id);
         });
+        cardEl.addEventListener("keydown", function (e) {
+          if (e.target.tagName === "SELECT" || e.target.tagName === "OPTION") return;
+          if (e.key === "Enter" || e.key === " ") { e.preventDefault(); openJobDetail(a.id); }
+        });
         if (lastAppStatuses[a.id] !== undefined && lastAppStatuses[a.id] !== a.status) {
           cardEl.classList.add("flash-update");
         }
@@ -725,7 +729,7 @@
       return '<option value="' + s + '" ' + (s === a.status ? "selected" : "") + '>' + s + '</option>';
     }).join("");
 
-    return '<div class="card ' + (dimmed ? "dimmed" : "") + '" id="cardwrap-' + a.id + '" style="--entity-color:' + entity.color + ';">' +
+    return '<div class="card ' + (dimmed ? "dimmed" : "") + '" id="cardwrap-' + a.id + '" style="--entity-color:' + entity.color + ';" tabindex="0" role="button" aria-label="View details for ' + escapeHtml(a.company) + '">' +
       '<div class="row-top">' +
         '<div class="name-row">' +
           '<div class="entity-icon">' + entity.initial + '</div>' +
@@ -934,6 +938,10 @@
           if (e.target.tagName === "SELECT" || e.target.tagName === "OPTION") return;
           openInvoiceDetail(i.id);
         });
+        cardEl.addEventListener("keydown", function (e) {
+          if (e.target.tagName === "SELECT" || e.target.tagName === "OPTION") return;
+          if (e.key === "Enter" || e.key === " ") { e.preventDefault(); openInvoiceDetail(i.id); }
+        });
       }
       if (lastInvoiceStatuses[i.id] !== undefined && lastInvoiceStatuses[i.id] !== i.status) {
         if (cardEl) cardEl.classList.add("flash-update");
@@ -952,7 +960,7 @@
       return '<option value="' + s + '" ' + (s === inv.status ? "selected" : "") + '>' + s.replace("_", " ") + '</option>';
     }).join("");
 
-    return '<div class="card ' + (dimmed ? "dimmed" : "") + '" id="invcardwrap-' + inv.id + '" style="--entity-color:' + entity.color + ';">' +
+    return '<div class="card ' + (dimmed ? "dimmed" : "") + '" id="invcardwrap-' + inv.id + '" style="--entity-color:' + entity.color + ';" tabindex="0" role="button" aria-label="View details for ' + escapeHtml(inv.client) + '">' +
       '<div class="row-top">' +
         '<div class="name-row">' +
           '<div class="entity-icon">' + entity.initial + '</div>' +
