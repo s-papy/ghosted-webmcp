@@ -6,16 +6,29 @@
 <title>Roach Motel Exit — cancel subscriptions without the maze</title>
 <style>
   :root {
-    --bg: #0b0d12;
-    --panel: #12151c;
-    --panel-2: #171b24;
-    --border: #262b36;
-    --text: #e8eaf0;
-    --muted: #8b92a3;
-    --accent: #6ee7b7;
-    --danger: #f87171;
-    --warn: #fbbf24;
-    --link: #93c5fd;
+    /* dataviz-skill validated dark palette (references/palette.md) */
+    --bg: #0d0d0d;              /* page plane, dark */
+    --panel: #1a1a19;           /* chart/card surface, dark */
+    --panel-2: #242423;         /* one step up, for inputs/hover */
+    --border: rgba(255,255,255,0.10);
+    --text: #ffffff;            /* primary ink, dark */
+    --muted: #c3c2b7;           /* secondary ink, dark */
+    --faint: #898781;           /* muted axis/label ink */
+    --link: #3987e5;            /* categorical slot 1 (blue), dark step */
+
+    /* status palette — fixed, never themed, always paired with icon + label */
+    --good: #0ca30c;
+    --warning: #fab219;
+    --serious: #ec835a;
+    --critical: #e66767;        /* categorical slot 8 red, dark — used as the "danger" accent */
+
+    /* categorical slots, fixed order, assigned to categories below */
+    --cat-1: #3987e5; /* blue */
+    --cat-2: #d95926; /* orange */
+    --cat-3: #199e70; /* aqua */
+    --cat-4: #c98500; /* yellow */
+    --cat-5: #d55181; /* magenta */
+    --cat-6: #008300; /* green */
   }
   * { box-sizing: border-box; }
   body {
@@ -29,11 +42,11 @@
   header h1 { font-size: 1.9rem; margin: 0 0 6px; }
   header p.tagline { color: var(--muted); max-width: 640px; margin: 0 0 6px; }
   header p.stat {
-    color: var(--warn);
+    color: var(--warning);
     font-size: 0.92rem;
     margin: 0 0 24px;
   }
-  header p.stat a { color: var(--warn); }
+  header p.stat a { color: var(--warning); }
 
   .summary {
     display: grid;
@@ -51,12 +64,12 @@
     font-size: 0.72rem;
     text-transform: uppercase;
     letter-spacing: 0.04em;
-    color: var(--muted);
+    color: var(--faint);
     margin-bottom: 6px;
   }
-  .stat-card .value { font-size: 1.6rem; font-weight: 700; }
-  .stat-card.warn .value { color: var(--warn); }
-  .stat-card.good .value { color: var(--accent); }
+  .stat-card .value { font-size: 1.6rem; font-weight: 700; font-variant-numeric: proportional-nums; }
+  .stat-card.warn .value { color: var(--warning); }
+  .stat-card.good .value { color: var(--good); }
 
   .toolbar {
     display: flex;
@@ -83,6 +96,7 @@
   .card {
     background: var(--panel);
     border: 1px solid var(--border);
+    border-left: 3px solid var(--cat-color, var(--border));
     border-radius: 14px;
     padding: 16px 18px;
     display: flex;
@@ -96,28 +110,32 @@
     justify-content: space-between;
     align-items: flex-start;
   }
+  .card .name-row { display: flex; align-items: center; gap: 8px; }
+  .card .cat-icon { font-size: 1.15rem; line-height: 1; }
   .card .name { font-weight: 700; font-size: 1.05rem; }
   .card .category { color: var(--muted); font-size: 0.78rem; }
-  .card .price { font-size: 1.1rem; font-weight: 700; white-space: nowrap; }
+  .card .price { font-size: 1.1rem; font-weight: 700; white-space: nowrap; font-variant-numeric: proportional-nums; }
   .card .price span { font-size: 0.7rem; color: var(--muted); font-weight: 400; }
 
   .badge {
-    display: inline-block;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
     font-size: 0.72rem;
     padding: 3px 9px;
     border-radius: 999px;
     border: 1px solid var(--border);
     width: fit-content;
   }
-  .badge.active { color: var(--accent); border-color: #1f4d3a; background: #0f2019; }
-  .badge.paused { color: var(--warn); border-color: #4d3f1f; background: #201a0f; }
-  .badge.canceled { color: var(--muted); }
-  .badge.unused { color: var(--danger); border-color: #4d1f1f; background: #200f0f; }
-  .badge.used { color: var(--muted); }
+  .badge.status-active { color: var(--good); border-color: color-mix(in srgb, var(--good) 40%, transparent); background: color-mix(in srgb, var(--good) 12%, transparent); }
+  .badge.status-paused { color: var(--warning); border-color: color-mix(in srgb, var(--warning) 40%, transparent); background: color-mix(in srgb, var(--warning) 12%, transparent); }
+  .badge.status-canceled { color: var(--faint); }
+  .badge.usage-unused { color: var(--serious); border-color: color-mix(in srgb, var(--serious) 40%, transparent); background: color-mix(in srgb, var(--serious) 12%, transparent); }
+  .badge.usage-used { color: var(--faint); }
 
   .card .meta { font-size: 0.8rem; color: var(--muted); }
 
-  .card-actions { display: flex; gap: 8px; margin-top: 4px; }
+  .card-actions { display: flex; gap: 8px; margin-top: 4px; flex-wrap: wrap; }
   button {
     font-family: inherit;
     font-size: 0.85rem;
@@ -128,8 +146,10 @@
     background: var(--panel-2);
     color: var(--text);
   }
-  button.cancel-btn { border-color: #4d1f1f; color: var(--danger); }
-  button.cancel-btn:hover { background: #200f0f; }
+  button.cancel-btn { border-color: color-mix(in srgb, var(--critical) 45%, transparent); color: var(--critical); }
+  button.cancel-btn:hover { background: color-mix(in srgb, var(--critical) 14%, transparent); }
+  button.resume-btn { border-color: color-mix(in srgb, var(--good) 45%, transparent); color: var(--good); }
+  button.resume-btn:hover { background: color-mix(in srgb, var(--good) 14%, transparent); }
   button:disabled { opacity: 0.4; cursor: default; }
 
   .log {
@@ -137,17 +157,19 @@
     border: 1px solid var(--border);
     border-radius: 12px;
     padding: 14px 18px;
-    max-height: 220px;
+    max-height: 240px;
     overflow-y: auto;
   }
   .log h2 { font-size: 0.95rem; margin: 0 0 10px; color: var(--muted); }
-  .log-entry { font-size: 0.82rem; padding: 4px 0; border-bottom: 1px dashed var(--border); color: var(--muted); }
+  .log-entry { display: flex; gap: 8px; font-size: 0.82rem; padding: 5px 0; border-bottom: 1px dashed var(--border); color: var(--muted); }
   .log-entry:last-child { border-bottom: none; }
+  .log-entry .icon { flex-shrink: 0; }
   .log-entry .who { color: var(--link); font-weight: 600; }
-  .log-entry .who.agent { color: var(--accent); }
+  .log-entry .who.agent { color: var(--good); }
 
-  footer { margin-top: 40px; color: var(--muted); font-size: 0.8rem; }
+  footer { margin-top: 40px; color: var(--faint); font-size: 0.8rem; }
   footer a { color: var(--link); }
+  footer code { color: var(--muted); }
 
   /* Modal (the deliberate maze) */
   .overlay {
@@ -165,7 +187,10 @@
   }
   .modal h3 { margin: 0 0 10px; font-size: 1.1rem; }
   .modal p { color: var(--muted); font-size: 0.9rem; }
-  .modal .step-indicator { font-size: 0.72rem; color: var(--muted); margin-bottom: 12px; }
+  .step-dots { display: flex; gap: 6px; margin-bottom: 14px; }
+  .step-dots .dot { width: 20px; height: 4px; border-radius: 2px; background: var(--border); }
+  .step-dots .dot.done { background: var(--critical); }
+  .step-dots .dot.current { background: var(--warning); }
   .modal textarea {
     width: 100%; background: var(--panel-2); border: 1px solid var(--border);
     color: var(--text); border-radius: 8px; padding: 10px; font-family: inherit;
@@ -173,7 +198,7 @@
   }
   .modal .modal-actions { display: flex; flex-direction: column; gap: 8px; margin-top: 16px; }
   .modal .modal-actions button { width: 100%; padding: 10px; }
-  .modal .btn-primary { background: var(--accent); color: #06251a; border: none; font-weight: 600; }
+  .modal .btn-primary { background: var(--good); color: #06210a; border: none; font-weight: 600; }
   .modal .btn-danger-link { background: none; border: none; color: var(--muted); text-decoration: underline; font-size: 0.82rem; padding: 4px; }
 </style>
 </head>
@@ -220,10 +245,11 @@
     Everything lives in this browser's <code>localStorage</code> — no server,
     no real subscriptions, no real money, no connection to any real account.
     Brand names are illustrative example data only; this project is not
-    affiliated with or endorsed by any company named on this page. Six WebMCP
-    tools: <code>list_subscriptions</code>, <code>get_subscription</code>,
+    affiliated with or endorsed by any company named on this page. Eight
+    WebMCP tools: <code>list_subscriptions</code>, <code>get_subscription</code>,
     <code>search_subscriptions</code>, <code>get_savings_summary</code>,
-    <code>cancel_subscription</code>, <code>pause_subscription</code>.
+    <code>cancel_subscription</code>, <code>pause_subscription</code>,
+    <code>resume_subscription</code>, <code>cancel_all_unused</code>.
     MIT licensed.
   </footer>
 </div>
@@ -236,7 +262,7 @@
 (function () {
   "use strict";
 
-  var STORAGE_KEY = "roach_motel_exit_v1";
+  var STORAGE_KEY = "roach_motel_exit_v2";
 
   var SEED = [
     { id: "netflix", name: "Netflix", category: "Streaming", price: 17.99, renewalDate: addDays(9), usage: "used", lastActive: "today", status: "active" },
@@ -246,6 +272,20 @@
     { id: "adobecc", name: "Adobe Creative Cloud", category: "Software", price: 59.99, renewalDate: addDays(21), usage: "unused", lastActive: "70 days ago", status: "active" },
     { id: "psplus", name: "PlayStation Plus", category: "Gaming", price: 17.99, renewalDate: addDays(2), usage: "unused", lastActive: "95 days ago", status: "active" }
   ];
+
+  // categorical palette assigned in fixed slot order (dataviz-skill rule:
+  // never cycled / reassigned by rank) — one slot per category, plus an icon.
+  var CATEGORY_STYLE = {
+    "Streaming": { color: "var(--cat-1)", icon: "🎬" },
+    "Music": { color: "var(--cat-2)", icon: "🎵" },
+    "AI Tools": { color: "var(--cat-3)", icon: "🤖" },
+    "Shopping": { color: "var(--cat-4)", icon: "🛒" },
+    "Software": { color: "var(--cat-5)", icon: "🎨" },
+    "Gaming": { color: "var(--cat-6)", icon: "🎮" }
+  };
+  function categoryStyle(category) {
+    return CATEGORY_STYLE[category] || { color: "var(--border)", icon: "📦" };
+  }
 
   function addDays(n) {
     var d = new Date();
@@ -287,8 +327,10 @@
     }) || null;
   }
 
-  function addLog(who, text) {
-    state.log.unshift({ who: who, text: text, at: new Date().toISOString() });
+  var LOG_ICONS = { canceled: "🚫", paused: "⏸", resumed: "▶" };
+
+  function addLog(who, action, text) {
+    state.log.unshift({ who: who, action: action, text: text, at: new Date().toISOString() });
     state.log = state.log.slice(0, 40);
   }
 
@@ -340,31 +382,48 @@
     el.innerHTML = subs.map(renderCard).join("");
 
     subs.forEach(function (s) {
-      var btn = document.getElementById("cancel-" + s.id);
-      if (btn) btn.addEventListener("click", function () { openCancelMaze(s.id); });
+      var cancelBtn = document.getElementById("cancel-" + s.id);
+      if (cancelBtn) cancelBtn.addEventListener("click", function () { openCancelMaze(s.id); });
       var pauseBtn = document.getElementById("pause-" + s.id);
-      if (pauseBtn) pauseBtn.addEventListener("click", function () { pauseSubscription({ id_or_name: s.id }); render(); });
+      if (pauseBtn) pauseBtn.addEventListener("click", function () { pauseSubscription({ id_or_name: s.id }, "you"); render(); });
+      var resumeBtn = document.getElementById("resume-" + s.id);
+      if (resumeBtn) resumeBtn.addEventListener("click", function () { resumeSubscription({ id_or_name: s.id }, "you"); render(); });
     });
   }
 
   function renderCard(s) {
     var isCanceled = s.status === "canceled";
+    var isPaused = s.status === "paused";
+    var cat = categoryStyle(s.category);
+
     var usageBadge = s.usage === "unused"
-      ? '<span class="badge unused">Unused · ' + escapeHtml(s.lastActive) + '</span>'
-      : '<span class="badge used">Active use · ' + escapeHtml(s.lastActive) + '</span>';
+      ? '<span class="badge usage-unused">⚠ Unused · ' + escapeHtml(s.lastActive) + '</span>'
+      : '<span class="badge usage-used">Active use · ' + escapeHtml(s.lastActive) + '</span>';
 
-    var statusBadge = '<span class="badge ' + s.status + '">' + s.status + '</span>';
+    var statusIcon = isCanceled ? "✕" : (isPaused ? "⏸" : "●");
+    var statusBadge = '<span class="badge status-' + s.status + '">' + statusIcon + ' ' + s.status + '</span>';
 
-    var actions = isCanceled
-      ? '<div class="card-actions"><button disabled>Canceled</button></div>'
-      : '<div class="card-actions">' +
+    var actions;
+    if (isCanceled) {
+      actions = '<div class="card-actions"><button disabled>Canceled</button></div>';
+    } else if (isPaused) {
+      actions = '<div class="card-actions">' +
+        '<button class="resume-btn" id="resume-' + s.id + '">Resume</button>' +
         '<button class="cancel-btn" id="cancel-' + s.id + '">Cancel</button>' +
-        (s.status === "active" ? '<button id="pause-' + s.id + '">Pause</button>' : '') +
         '</div>';
+    } else {
+      actions = '<div class="card-actions">' +
+        '<button class="cancel-btn" id="cancel-' + s.id + '">Cancel</button>' +
+        '<button id="pause-' + s.id + '">Pause</button>' +
+        '</div>';
+    }
 
-    return '<div class="card ' + (isCanceled ? "canceled" : "") + '">' +
+    return '<div class="card ' + (isCanceled ? "canceled" : "") + '" style="--cat-color: ' + cat.color + ';">' +
       '<div class="row-top">' +
-        '<div><div class="name">' + escapeHtml(s.name) + '</div><div class="category">' + escapeHtml(s.category) + '</div></div>' +
+        '<div class="name-row">' +
+          '<span class="cat-icon">' + cat.icon + '</span>' +
+          '<div><div class="name">' + escapeHtml(s.name) + '</div><div class="category">' + escapeHtml(s.category) + '</div></div>' +
+        '</div>' +
         '<div class="price">' + money(s.price) + '<span> /mo</span></div>' +
       '</div>' +
       '<div>' + statusBadge + ' ' + usageBadge + '</div>' +
@@ -380,7 +439,8 @@
       return;
     }
     el.innerHTML = state.log.map(function (entry) {
-      return '<div class="log-entry"><span class="who ' + (entry.who === "agent" ? "agent" : "") + '">' +
+      var icon = LOG_ICONS[entry.action] || "•";
+      return '<div class="log-entry"><span class="icon">' + icon + '</span><span class="who ' + (entry.who === "agent" ? "agent" : "") + '">' +
         (entry.who === "agent" ? "Agent" : "You") + '</span> — ' + escapeHtml(entry.text) + '</div>';
     }).join("");
   }
@@ -411,6 +471,14 @@
     document.getElementById("overlay").style.display = "none";
   }
 
+  function stepDots(current) {
+    var dots = [1, 2, 3].map(function (n) {
+      var cls = n < current ? "done" : (n === current ? "current" : "");
+      return '<span class="dot ' + cls + '"></span>';
+    });
+    return '<div class="step-dots">' + dots.join("") + '</div>';
+  }
+
   function renderMaze() {
     var overlay = document.getElementById("overlay");
     var body = document.getElementById("modalBody");
@@ -421,7 +489,7 @@
 
     if (mazeState.step === 1) {
       body.innerHTML =
-        '<div class="step-indicator">Step 1 of 3</div>' +
+        stepDots(1) +
         '<h3>Wait — before you go</h3>' +
         '<p>Here\'s 50% off ' + escapeHtml(sub.name) + ' for the next 3 months. Most people who see this offer stay.</p>' +
         '<div class="modal-actions">' +
@@ -432,7 +500,7 @@
       document.getElementById("mazeNext").onclick = function () { mazeState.step = 2; renderMaze(); };
     } else if (mazeState.step === 2) {
       body.innerHTML =
-        '<div class="step-indicator">Step 2 of 3</div>' +
+        stepDots(2) +
         '<h3>Are you sure?</h3>' +
         '<p>You\'ll lose access to ' + escapeHtml(sub.name) + ' immediately and lose your saved data.</p>' +
         '<div class="modal-actions">' +
@@ -443,7 +511,7 @@
       document.getElementById("mazeNext2").onclick = function () { mazeState.step = 3; renderMaze(); };
     } else {
       body.innerHTML =
-        '<div class="step-indicator">Step 3 of 3</div>' +
+        stepDots(3) +
         '<h3>Tell us why you\'re leaving</h3>' +
         '<p>Required before we can process your cancellation.</p>' +
         '<textarea id="mazeReason" placeholder="Your reason…"></textarea>' +
@@ -514,7 +582,7 @@
     if (sub.status === "canceled") return { error: sub.name + " is already canceled." };
     sub.status = "canceled";
     sub.canceledAt = todayISO();
-    addLog(who || "agent", "canceled " + sub.name +
+    addLog(who || "agent", "canceled", "canceled " + sub.name +
       (args && args.reason ? ' — reason: "' + args.reason + '"' : ""));
     save();
     return { subscription: sub, message: sub.name + " canceled, effective immediately. No retention offer, no maze." };
@@ -526,13 +594,42 @@
     if (sub.status !== "active") return { error: sub.name + " isn't active, so it can't be paused." };
     sub.status = "paused";
     sub.resumeInDays = args && args.resume_in_days ? args.resume_in_days : 30;
-    addLog(who || "agent", "paused " + sub.name + " (resumes in " + sub.resumeInDays + " days)");
+    addLog(who || "agent", "paused", "paused " + sub.name + " (resumes in " + sub.resumeInDays + " days)");
     save();
     return { subscription: sub, message: sub.name + " paused for " + sub.resumeInDays + " days." };
   }
 
-  // expose actions used by human UI directly (bypassing the "who" default of agent)
-  window.__roachDemo = { cancelSubscription: cancelSubscription, pauseSubscription: pauseSubscription };
+  function resumeSubscription(args, who) {
+    var sub = findSub(args && args.id_or_name);
+    if (!sub) return { error: "No subscription matches '" + (args && args.id_or_name) + "'." };
+    if (sub.status !== "paused") return { error: sub.name + " isn't paused, so it can't be resumed." };
+    sub.status = "active";
+    delete sub.resumeInDays;
+    addLog(who || "agent", "resumed", "resumed " + sub.name);
+    save();
+    return { subscription: sub, message: sub.name + " is active again." };
+  }
+
+  function cancelAllUnused(who) {
+    var targets = state.subs.filter(function (s) { return s.status === "active" && s.usage === "unused"; });
+    if (targets.length === 0) return { canceled: [], message: "Nothing to cancel — no active subscription is currently flagged unused." };
+    var canceledNames = [];
+    var totalMonthly = 0;
+    targets.forEach(function (s) {
+      s.status = "canceled";
+      s.canceledAt = todayISO();
+      canceledNames.push(s.name);
+      totalMonthly += s.price;
+    });
+    addLog(who || "agent", "canceled", "bulk-canceled " + targets.length + " unused subscriptions: " + canceledNames.join(", "));
+    save();
+    return {
+      canceled: canceledNames,
+      monthlySavings: round2(totalMonthly),
+      annualSavings: round2(totalMonthly * 12),
+      message: "Canceled " + targets.length + " unused subscription(s) (" + canceledNames.join(", ") + "), saving " + money(round2(totalMonthly)) + "/mo — " + money(round2(totalMonthly * 12)) + "/yr."
+    };
+  }
 
   // ---------- WebMCP tool registration ----------
 
@@ -562,7 +659,7 @@
       inputSchema: {
         type: "object",
         properties: {
-          id_or_name: { type: "string", description: "Subscription id or name, e.g. 'gympro' or 'GymPro'." }
+          id_or_name: { type: "string", description: "Subscription id or name, e.g. 'netflix' or 'Netflix'." }
         },
         required: ["id_or_name"]
       },
@@ -580,7 +677,7 @@
         type: "object",
         properties: {
           query: { type: "string", description: "Free-text match against name and category." },
-          category: { type: "string", description: "Exact category, e.g. 'Streaming', 'Fitness'." },
+          category: { type: "string", description: "Exact category, e.g. 'Streaming', 'Gaming'." },
           status: { type: "string", enum: ["active", "paused", "canceled"] }
         }
       },
@@ -635,6 +732,35 @@
         render();
         if (result.error) return { content: [{ type: "text", text: result.error }], isError: true };
         return { content: [{ type: "text", text: result.message }] };
+      }
+    });
+
+    document.modelContext.registerTool({
+      name: "resume_subscription",
+      description: "Resume a paused subscription, matched by id or name, putting it back to active.",
+      inputSchema: {
+        type: "object",
+        properties: {
+          id_or_name: { type: "string", description: "Subscription id or name to resume." }
+        },
+        required: ["id_or_name"]
+      },
+      async execute(args) {
+        var result = resumeSubscription(args, "agent");
+        render();
+        if (result.error) return { content: [{ type: "text", text: result.error }], isError: true };
+        return { content: [{ type: "text", text: result.message }] };
+      }
+    });
+
+    document.modelContext.registerTool({
+      name: "cancel_all_unused",
+      description: "Cancel every active subscription currently flagged as unused (30+ days without use) in one call. Returns the list canceled and the resulting monthly/annual savings.",
+      inputSchema: { type: "object", properties: {} },
+      async execute() {
+        var result = cancelAllUnused("agent");
+        render();
+        return { content: [{ type: "text", text: JSON.stringify(result, null, 2) }] };
       }
     });
   }
