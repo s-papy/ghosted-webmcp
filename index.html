@@ -102,6 +102,23 @@
   .stat-card.warn .value { color: var(--warning); }
   .stat-card.good .value { color: var(--good); }
 
+  /* Funnel — ordinal sequential ramp per dataviz-skill palette.md
+     (steps 300/450/600, dark-surface-safe: never darker than step 600) */
+  .funnel {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 16px 18px;
+    margin-bottom: 20px;
+  }
+  .funnel .funnel-title { font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.04em; color: var(--faint); margin-bottom: 12px; }
+  .funnel-row { display: flex; align-items: center; gap: 10px; margin-bottom: 8px; }
+  .funnel-row:last-child { margin-bottom: 0; }
+  .funnel-row .funnel-label { width: 92px; flex-shrink: 0; font-size: 0.82rem; color: var(--muted); }
+  .funnel-row .funnel-track { flex: 1; background: var(--panel-2); border-radius: 4px; height: 22px; overflow: hidden; }
+  .funnel-row .funnel-fill { height: 100%; border-radius: 4px; min-width: 4px; transition: width 0.3s; }
+  .funnel-row .funnel-value { width: 34px; flex-shrink: 0; text-align: right; font-size: 0.82rem; font-weight: 700; font-variant-numeric: proportional-nums; }
+
   .toolbar {
     display: flex;
     gap: 10px;
@@ -224,6 +241,7 @@
 
     <div id="insights"></div>
     <section class="summary" id="summary"></section>
+    <section class="funnel" id="funnel"></section>
 
     <div class="toolbar">
       <input type="text" id="searchInput" placeholder="Search company or role…" />
@@ -253,6 +271,7 @@
 
     <div id="invoiceInsights"></div>
     <section class="summary" id="invoiceSummary"></section>
+    <section class="funnel" id="invoiceFunnel"></section>
 
     <div class="toolbar">
       <input type="text" id="invoiceSearchInput" placeholder="Search client or project…" />
@@ -400,8 +419,37 @@
   function render() {
     renderInsights();
     renderSummary();
+    renderFunnel();
     renderGrid();
     renderLog();
+  }
+
+  // Ordinal sequential ramp (blue), steps 300/450/600 — dark-surface-safe
+  // per dataviz-skill palette.md ("on dark, go no darker than step 600").
+  var FUNNEL_RAMP = ["#6da7ec", "#2a78d6", "#184f95"];
+
+  function renderFunnelChart(containerId, title, stages) {
+    var el = document.getElementById(containerId);
+    var max = Math.max.apply(null, stages.map(function (s) { return s.count; }).concat([1]));
+    el.innerHTML = '<div class="funnel-title">' + escapeHtml(title) + '</div>' +
+      stages.map(function (s, i) {
+        var pct = Math.round((s.count / max) * 100);
+        var color = FUNNEL_RAMP[i % FUNNEL_RAMP.length];
+        return '<div class="funnel-row">' +
+          '<div class="funnel-label">' + escapeHtml(s.label) + '</div>' +
+          '<div class="funnel-track"><div class="funnel-fill" style="width:' + pct + '%; background:' + color + ';"></div></div>' +
+          '<div class="funnel-value">' + s.count + '</div>' +
+        '</div>';
+      }).join("");
+  }
+
+  function renderFunnel() {
+    var summary = computePipelineSummary();
+    renderFunnelChart("funnel", "Pipeline (current stage)", [
+      { label: "Applied", count: summary.byStatus.applied },
+      { label: "Interviewing", count: summary.byStatus.interviewing },
+      { label: "Offer", count: summary.byStatus.offer }
+    ]);
   }
 
   function renderInsights() {
@@ -512,8 +560,17 @@
   function renderInvoices() {
     renderInvoiceInsights();
     renderInvoiceSummary();
+    renderInvoiceFunnel();
     renderInvoiceGrid();
     renderInvoiceLog();
+  }
+
+  function renderInvoiceFunnel() {
+    var summary = computePaymentSummary();
+    renderFunnelChart("invoiceFunnel", "Invoices (current stage)", [
+      { label: "Sent", count: summary.byStatus.sent },
+      { label: "Paid", count: summary.byStatus.paid }
+    ]);
   }
 
   function renderInvoiceInsights() {
