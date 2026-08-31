@@ -204,6 +204,17 @@
     gap: var(--sp-4);
     margin-bottom: var(--sp-8);
   }
+  .empty-state {
+    grid-column: 1 / -1;
+    text-align: center;
+    padding: var(--sp-10) var(--sp-6);
+    background: var(--panel);
+    border: 1px dashed var(--border);
+    border-radius: var(--r-lg);
+  }
+  .empty-state .empty-icon { font-size: 2rem; margin-bottom: var(--sp-3); }
+  .empty-state .empty-title { font-weight: 700; margin-bottom: var(--sp-2); }
+  .empty-state .empty-sub { color: var(--muted); font-size: 0.88rem; margin-bottom: var(--sp-4); }
   .card {
     background: var(--panel);
     border: 1px solid var(--border);
@@ -661,7 +672,18 @@
     });
 
     if (apps.length === 0) {
-      el.innerHTML = '<p style="color: var(--muted);">No applications match.</p>';
+      el.innerHTML = '<div class="empty-state">' +
+        '<div class="empty-icon">🔍</div>' +
+        '<div class="empty-title">Nothing matches "' + escapeHtml(q || statusFilter) + '"</div>' +
+        '<div class="empty-sub">Try a different search, or clear the filters to see all applications.</div>' +
+        '<button id="clearFiltersBtn">Clear filters</button>' +
+      '</div>';
+      var clearBtn = document.getElementById("clearFiltersBtn");
+      if (clearBtn) clearBtn.addEventListener("click", function () {
+        document.getElementById("searchInput").value = "";
+        document.getElementById("statusFilter").value = "";
+        renderGrid();
+      });
       return;
     }
 
@@ -870,7 +892,18 @@
     });
 
     if (invoices.length === 0) {
-      el.innerHTML = '<p style="color: var(--muted);">No invoices match.</p>';
+      el.innerHTML = '<div class="empty-state">' +
+        '<div class="empty-icon">🔍</div>' +
+        '<div class="empty-title">Nothing matches "' + escapeHtml(q || statusFilter) + '"</div>' +
+        '<div class="empty-sub">Try a different search, or clear the filters to see all invoices.</div>' +
+        '<button id="clearInvoiceFiltersBtn">Clear filters</button>' +
+      '</div>';
+      var clearInvBtn = document.getElementById("clearInvoiceFiltersBtn");
+      if (clearInvBtn) clearInvBtn.addEventListener("click", function () {
+        document.getElementById("invoiceSearchInput").value = "";
+        document.getElementById("invoiceStatusFilter").value = "";
+        renderInvoiceGrid();
+      });
       return;
     }
 
