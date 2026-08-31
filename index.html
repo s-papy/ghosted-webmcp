@@ -272,14 +272,14 @@
   }
 
   var SEED = [
-    { id: "northwind", company: "Northwind Data", role: "Data Analyst", url: "", dateApplied: daysAgo(45), status: "applied" },
-    { id: "kestrel", company: "Kestrel Software", role: "Frontend Engineer", url: "", dateApplied: daysAgo(28), status: "applied" },
-    { id: "meridian", company: "Meridian Labs", role: "Product Designer", url: "", dateApplied: daysAgo(15), status: "applied" },
-    { id: "cobalt", company: "Cobalt Systems", role: "Backend Engineer", url: "", dateApplied: daysAgo(9), status: "applied" },
-    { id: "brightside", company: "Brightside Health", role: "UX Researcher", url: "", dateApplied: daysAgo(3), status: "applied" },
-    { id: "fielding", company: "Fielding & Vance", role: "Marketing Manager", url: "", dateApplied: daysAgo(20), status: "interviewing" },
-    { id: "anchor", company: "Anchor Robotics", role: "Ops Analyst", url: "", dateApplied: daysAgo(35), status: "rejected" },
-    { id: "lumen", company: "Lumen Analytics", role: "Senior Engineer", url: "", dateApplied: daysAgo(12), status: "offer" }
+    { id: "northwind", company: "Northwind Data", role: "Data Analyst", url: "", dateApplied: daysAgo(45), status: "applied", respondedAt: null },
+    { id: "kestrel", company: "Kestrel Software", role: "Frontend Engineer", url: "", dateApplied: daysAgo(28), status: "applied", respondedAt: null },
+    { id: "meridian", company: "Meridian Labs", role: "Product Designer", url: "", dateApplied: daysAgo(15), status: "applied", respondedAt: null },
+    { id: "cobalt", company: "Cobalt Systems", role: "Backend Engineer", url: "", dateApplied: daysAgo(9), status: "applied", respondedAt: null },
+    { id: "brightside", company: "Brightside Health", role: "UX Researcher", url: "", dateApplied: daysAgo(3), status: "applied", respondedAt: null },
+    { id: "fielding", company: "Fielding & Vance", role: "Marketing Manager", url: "", dateApplied: daysAgo(20), status: "interviewing", respondedAt: daysAgo(14) },
+    { id: "anchor", company: "Anchor Robotics", role: "Ops Analyst", url: "", dateApplied: daysAgo(35), status: "rejected", respondedAt: daysAgo(27) },
+    { id: "lumen", company: "Lumen Analytics", role: "Senior Engineer", url: "", dateApplied: daysAgo(12), status: "offer", respondedAt: daysAgo(7) }
   ];
 
   function load() {
@@ -352,6 +352,7 @@
     el.innerHTML =
       statCard("Total applications", String(summary.total), "") +
       statCard("Response rate", summary.responseRate + "%", summary.responseRate >= 30 ? "good" : "") +
+      statCard("Avg. response time", summary.avgResponseDays === null ? "—" : summary.avgResponseDays + "d", "") +
       statCard("Ghosted", String(summary.ghostedCount), summary.ghostedCount > 0 ? "warn" : "") +
       statCard("Awaiting follow-up", String(summary.followupCount), summary.followupCount > 0 ? "warn" : "");
   }
@@ -439,6 +440,7 @@
       url: args.url || "",
       dateApplied: args.date_applied || todayISO(),
       status: "applied",
+      respondedAt: null,
       notes: args.notes || ""
     };
     state.apps.unshift(app);
@@ -474,6 +476,8 @@
     if (STATUS_OPTIONS.indexOf(args.status) === -1) return { error: "Status must be one of: " + STATUS_OPTIONS.join(", ") + "." };
     var prev = app.status;
     app.status = args.status;
+    var isRealResponse = ["interviewing", "offer", "rejected"].indexOf(args.status) !== -1;
+    if (isRealResponse && !app.respondedAt) app.respondedAt = todayISO();
     addLog(who || "agent", "moved " + app.company + " from " + prev + " to " + args.status +
       (args.note ? ' — "' + args.note + '"' : ""));
     save();
@@ -535,13 +539,22 @@
     var responded = byStatus.interviewing + byStatus.offer + byStatus.rejected;
     var responseRate = total > 0 ? round1((responded / total) * 100) : 0;
     var ghostRate = total > 0 ? round1((byStatus.ghosted / total) * 100) : 0;
+
+    var responseTimes = state.apps
+      .filter(function (a) { return a.respondedAt; })
+      .map(function (a) { return daysSince(a.dateApplied) - daysSince(a.respondedAt); });
+    var avgResponseDays = responseTimes.length > 0
+      ? round1(responseTimes.reduce(function (s, d) { return s + d; }, 0) / responseTimes.length)
+      : null;
+
     return {
       total: total,
       byStatus: byStatus,
       responseRate: responseRate,
       ghostRate: ghostRate,
       ghostedCount: byStatus.ghosted,
-      followupCount: getFollowupReminders().length
+      followupCount: getFollowupReminders().length,
+      avgResponseDays: avgResponseDays
     };
   }
 

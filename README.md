@@ -30,6 +30,10 @@ application reaches offer stage, the page surfaces which other still-active
 applications are worth notifying about the competing offer — computed from
 the same shared state, not a feature you have to go looking for.
 
+It also tracks a real personal benchmark — average response time — the same
+kind of KPI industry ghosting research uses, computed automatically from your
+own data instead of a number you'd have to calculate by hand.
+
 ## The tools
 
 | Tool | Read-only? | What it does |
