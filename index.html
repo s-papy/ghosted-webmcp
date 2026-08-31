@@ -57,21 +57,34 @@
     padding: 18px 22px;
     margin-bottom: 20px;
   }
-  .agent-howto h2 { font-size: 1rem; margin: 0 0 10px; }
-  .agent-howto ol { margin: 0 0 8px; padding-left: 20px; color: var(--muted); font-size: 0.88rem; }
+  .agent-howto h2 { font-size: 1rem; margin: 0 0 6px; }
+  .agent-howto .agent-disclaimer { color: var(--faint); font-size: 0.78rem; margin: 0 0 14px; }
+  .agent-howto details { margin-bottom: 14px; }
+  .agent-howto summary { cursor: pointer; color: var(--muted); font-size: 0.82rem; }
+  .agent-howto ol { margin: 8px 0 0; padding-left: 20px; color: var(--muted); font-size: 0.85rem; }
   .agent-howto ol li { margin-bottom: 4px; }
   .agent-howto ol code { background: var(--panel-2); padding: 1px 5px; border-radius: 4px; color: var(--text); }
-  .agent-prompts { list-style: none; margin: 0 0 10px; padding: 0; display: flex; flex-direction: column; gap: 6px; }
-  .agent-prompts li {
-    background: var(--panel-2);
-    border: 1px solid var(--border);
-    border-radius: 8px;
-    padding: 8px 12px;
-    font-size: 0.85rem;
-    font-style: italic;
-    color: var(--text);
+
+  .agent-chat { background: var(--panel-2); border: 1px solid var(--border); border-radius: 10px; padding: 12px; }
+  .agent-transcript { max-height: 220px; overflow-y: auto; margin-bottom: 10px; }
+  .agent-transcript:empty::before {
+    content: "Click a prompt below, or type your own.";
+    color: var(--faint); font-size: 0.82rem;
   }
-  .agent-fallback { color: var(--faint); font-size: 0.8rem; margin: 0; }
+  .chat-msg { margin-bottom: 10px; font-size: 0.86rem; }
+  .chat-msg:last-child { margin-bottom: 0; }
+  .chat-msg .chat-who { font-weight: 700; margin-bottom: 2px; }
+  .chat-msg.user .chat-who { color: var(--muted); }
+  .chat-msg.agent .chat-who { color: var(--good); }
+  .chat-msg .chat-bubble { background: var(--panel); border: 1px solid var(--border); border-radius: 8px; padding: 8px 12px; }
+  .chat-msg .chat-trace { color: var(--faint); font-size: 0.76rem; font-family: ui-monospace, "SF Mono", Menlo, monospace; margin-top: 4px; }
+
+  .agent-quick-prompts { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 10px; }
+  .agent-quick-prompts button { font-size: 0.8rem; padding: 6px 10px; text-align: left; }
+  .agent-input-row { display: flex; gap: 8px; }
+  .agent-input-row input { flex: 1; }
+  .agent-input-row button { flex-shrink: 0; }
+  .primary-ish { background: var(--good); color: #06210a; border: none; font-weight: 700; }
 
   .digest {
     background: linear-gradient(135deg, color-mix(in srgb, var(--link) 14%, var(--panel)), var(--panel));
@@ -322,18 +335,25 @@
 
 <main class="main-content">
   <section class="agent-howto">
-    <h2>🤖 Try it with an agent</h2>
-    <ol>
-      <li>Open this page in <strong>Chrome</strong> with <code>chrome://flags/#enable-webmcp-testing</code> turned on, or in <strong>ChatGPT's in-app browser</strong>.</li>
-      <li>Then just ask, in plain language — no special syntax:</li>
-    </ol>
-    <ul class="agent-prompts">
-      <li>"Check my job pipeline for anything I should know about."</li>
-      <li>"Flag any applications that have gone silent."</li>
-      <li>"Log a new invoice for Acme Co — $800, due in 14 days."</li>
-      <li>"I just got an offer — who else should I notify?"</li>
-    </ul>
-    <p class="agent-fallback">No agent handy right now? Everything below also works by hand — click Flag, use the dropdowns, click a card. But watching an agent do it in one call, live, is the whole point.</p>
+    <h2>🤖 Try the agent, right here</h2>
+    <p class="agent-disclaimer">This box is a scripted walkthrough, not a real AI model — it matches your message against a few known requests and calls the exact same WebMCP tools a real agent would, live, on the real data on this page. For a real AI actually reasoning about what to do, open this page in Chrome with the WebMCP flag on, or ChatGPT's in-app browser (details below).</p>
+
+    <div class="agent-chat">
+      <div class="agent-transcript" id="agentTranscript"></div>
+      <div class="agent-quick-prompts" id="agentQuickPrompts"></div>
+      <div class="agent-input-row">
+        <input type="text" id="agentInput" placeholder="Type a request, or click one above…" />
+        <button class="primary-ish" id="agentSendBtn">Send</button>
+      </div>
+    </div>
+
+    <details>
+      <summary>Using a real WebMCP agent instead</summary>
+      <ol>
+        <li>Open this page in <strong>Chrome</strong> with <code>chrome://flags/#enable-webmcp-testing</code> turned on, or in <strong>ChatGPT's in-app browser</strong>.</li>
+        <li>Then ask it anything — no special syntax needed, it discovers the same tools this demo box calls.</li>
+      </ol>
+    </details>
   </section>
 
   <div class="digest" id="digest"></div>
@@ -1516,6 +1536,107 @@
   document.addEventListener("keydown", function (e) {
     if (e.key === "Escape") closeDetail();
   });
+
+  // ---------- simulated agent chat ----------
+  // Not a real AI model — no API key, no backend, nothing that could leak a
+  // secret from a public static page. It pattern-matches a few known requests
+  // and calls the exact same functions the WebMCP tools above call, live, on
+  // the real page state, so the underlying mechanism is genuinely exercised.
+
+  var AGENT_QUICK_PROMPTS = [
+    "Check my job pipeline for anything I should know about.",
+    "Flag any applications that have gone silent.",
+    "Log a new invoice for Acme Co — $800, due in 14 days.",
+    "I just got an offer — who else should I notify?"
+  ];
+  var agentChatLog = [];
+
+  function renderAgentQuickPrompts() {
+    var el = document.getElementById("agentQuickPrompts");
+    el.innerHTML = AGENT_QUICK_PROMPTS.map(function (p, i) {
+      return '<button data-quick-prompt="' + i + '">' + escapeHtml(p) + "</button>";
+    }).join("");
+    el.querySelectorAll("[data-quick-prompt]").forEach(function (btn) {
+      btn.addEventListener("click", function () {
+        runAgentPrompt(AGENT_QUICK_PROMPTS[parseInt(btn.getAttribute("data-quick-prompt"), 10)]);
+      });
+    });
+  }
+
+  function pushChatMsg(who, text, trace) {
+    agentChatLog.push({ who: who, text: text, trace: trace || null });
+    renderAgentTranscript();
+  }
+
+  function renderAgentTranscript() {
+    var el = document.getElementById("agentTranscript");
+    el.innerHTML = agentChatLog.map(function (m) {
+      return '<div class="chat-msg ' + m.who + '">' +
+        '<div class="chat-who">' + (m.who === "agent" ? "Agent" : "You") + "</div>" +
+        '<div class="chat-bubble">' + escapeHtml(m.text) + "</div>" +
+        (m.trace ? '<div class="chat-trace">→ ' + escapeHtml(m.trace) + "</div>" : "") +
+        "</div>";
+    }).join("");
+    el.scrollTop = el.scrollHeight;
+  }
+
+  function runAgentPrompt(text) {
+    text = String(text || "").trim();
+    if (!text) return;
+    pushChatMsg("user", text);
+
+    var lower = text.toLowerCase();
+    var reply, trace;
+
+    if (lower.indexOf("invoice") !== -1 && lower.indexOf("log") !== -1) {
+      var clientMatch = text.match(/for\s+([a-z0-9&' -]+?)\s*[-—,]/i);
+      var amountMatch = text.match(/\$\s?(\d+(?:\.\d+)?)/);
+      var daysMatch = text.match(/due in\s+(\d+)\s*day/i);
+      var client = clientMatch ? clientMatch[1].trim() : "Acme Co";
+      var amount = amountMatch ? parseFloat(amountMatch[1]) : 800;
+      var days = daysMatch ? parseInt(daysMatch[1], 10) : 14;
+      var result = logInvoice({ client: client, project: "logged via chat demo", amount: amount, due_date: daysAgo(-days) }, "agent");
+      trace = 'log_invoice({ client: "' + client + '", amount: ' + amount + ', due_date: "+' + days + 'd" })';
+      reply = result.message + " Switch to the Freelance invoices tab to see it.";
+    } else if (lower.indexOf("invoice") !== -1 && /stale|ghost|silent/.test(lower)) {
+      var rInv = flagStaleInvoices({}, "agent");
+      trace = "flag_stale_invoices()";
+      reply = rInv.message + (rInv.flagged.length ? " Check the Freelance invoices tab." : "");
+    } else if (/application|job/.test(lower) && /stale|ghost|silent/.test(lower)) {
+      var rApp = flagStaleApplications({}, "agent");
+      trace = "flag_stale_applications()";
+      reply = rApp.message;
+    } else if (/offer|leverage|notify/.test(lower)) {
+      var opps = getLeverageOpportunities();
+      trace = "get_leverage_opportunities()";
+      reply = opps.length
+        ? opps.map(function (o) { return "Offer from " + o.offerFrom + " — worth notifying " + o.candidates.map(function (c) { return c.company; }).join(", ") + "."; }).join(" ")
+        : "No open offers to leverage right now.";
+    } else if (/pipeline|digest|today|attention|check/.test(lower)) {
+      var d = getDailyDigest();
+      trace = "get_daily_digest()";
+      reply = d.items.length
+        ? d.totalActionable + " thing(s) worth a look: " + d.items.map(function (i) { return i.text; }).join(" · ")
+        : "Nothing needs your attention right now.";
+    } else {
+      reply = "I'm a small scripted demo, not a real AI — I only recognize a few requests. Try one of the buttons above, or open this page in a real WebMCP agent (see below) to ask anything.";
+      trace = null;
+    }
+
+    pushChatMsg("agent", reply, trace);
+    render();
+    renderInvoices();
+  }
+
+  document.getElementById("agentSendBtn").addEventListener("click", function () {
+    var input = document.getElementById("agentInput");
+    runAgentPrompt(input.value);
+    input.value = "";
+  });
+  document.getElementById("agentInput").addEventListener("keydown", function (e) {
+    if (e.key === "Enter") document.getElementById("agentSendBtn").click();
+  });
+  renderAgentQuickPrompts();
 
   registerTools();
   render();

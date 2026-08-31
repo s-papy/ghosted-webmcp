@@ -58,6 +58,13 @@ The page itself is laid out as a persistent sidebar plus a full-width
 content area — the shape of a real product, not a single centered column
 that reads as a landing page.
 
+A "try the agent, right here" chat box sits at the top of the page: it's a
+scripted pattern-matcher, not a real AI model — no API key, no backend,
+nothing a public static page could leak — but it calls the exact same
+functions the real WebMCP tools call, live, on the real data on the page.
+For genuine AI reasoning, the same panel links to opening the page in an
+actual WebMCP-enabled agent.
+
 ## The tools
 
 **Job applications**
