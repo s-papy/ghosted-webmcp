@@ -1,42 +1,41 @@
-# Roach Motel Exit
+# Ghosted
 
-A subscription dashboard where canceling by hand gets you the real "Roach
-Motel" maze — a retention offer, a guilt step, a mandatory reason — while an
-agent using this page's WebMCP tools cancels in one call. Entry for
-**[The WebMCP Challenge](https://webmcp.devpost.com/)** (deadline 3 September
-2026, 1pm PDT).
+A job application tracker that admits when a company has gone silent, instead
+of leaving you to guess. An agent using this page's WebMCP tools can log
+applications the moment you apply and flag every stale one in a single call.
+Entry for **[The WebMCP Challenge](https://webmcp.devpost.com/)** (deadline 3
+September 2026, 1pm PDT).
 
-**Live demo:** https://s-papy.github.io/roach-motel-exit-webmcp/
+**Live demo:** _add the deployed URL here after publishing_
 **Video:** _add the YouTube link here_
 
 ## Why WebMCP is a strong fit
 
-The average subscriber hits **6.2 dark patterns and 6.7 clicks** to cancel a
-service — well-documented enough that the US FTC built a
-["Click to Cancel"](https://www.ftc.gov/legal-library/browse/rules/negative-option-rule)
-rule around it. Cancellation flows are hard on purpose: the real cancel
-button is buried behind a retention offer, a "are you sure" guilt step, and a
-mandatory reason field.
+53% of job seekers were ghosted by an employer in the past year, and it now
+takes roughly 40 applications to land one interview. Existing trackers (Teal,
+Huntr, spreadsheets) are passive organizers — you copy each application in by
+hand after the fact, then check dates one by one to guess who's gone quiet.
 
-An agent trying to help here can't just guess at the DOM — it would hit the
-same maze a human does, or worse, get tricked into accepting the retention
-offer by mistake. WebMCP fixes this at the source: the page tells the agent
-the truth about what "cancel" means through a `cancel_subscription` tool that
-*is* the real exit, not a UI element that can be hidden behind three modals.
-When a human clicks Cancel, they get the maze (openly, so you can feel what
-it's simulating). When an agent calls the tool, it skips straight to done —
-and you watch the card update on the same page, in real time.
+An agent can do both parts of that chore for real: log the application in the
+same breath as helping you apply, and later, in one tool call, flag every
+application that's gone 21+ days without a response — work that's tedious to
+do by hand across dozens of applications and easy to keep putting off. This
+only works because the page exposes real, callable actions instead of a UI
+the agent would have to guess at, and because the state is shared: what the
+agent logs or flags shows up on the same page you're looking at, immediately.
 
 ## The tools
 
 | Tool | Read-only? | What it does |
 |---|---|---|
-| `list_subscriptions` | yes | List all subscriptions, optionally filtered by status. |
-| `get_subscription` | yes | Full detail on one subscription, matched by id or name. |
-| `search_subscriptions` | yes | Filter by text, category, or status. |
-| `get_savings_summary` | yes | Monthly spend, spend on unused subscriptions, potential annual savings. |
-| `cancel_subscription` | no | Cancel immediately, matched by id or name — no retention flow. |
-| `pause_subscription` | no | Pause instead of canceling outright. |
+| `log_application` | no | Log a new application (company, role, url, date). |
+| `get_application` | yes | Full detail on one application, matched by id or company. |
+| `list_applications` | yes | List applications, optionally filtered by status. |
+| `search_applications` | yes | Filter by text and/or status. |
+| `update_status` | no | Move an application to a new status (interviewing, offer, rejected, ghosted, withdrawn). |
+| `flag_stale_applications` | no | Mark every application silent for 21+ days as ghosted, in one call. |
+| `get_followup_reminders` | yes | Applications 7-20 days old — the window where following up is still worth it. |
+| `get_pipeline_summary` | yes | Total applications, response rate, ghost rate, applications awaiting follow-up. |
 
 ## Running it
 
@@ -60,12 +59,10 @@ To test the WebMCP tools:
 
 ## Data & privacy
 
-Everything lives in the browser's own `localStorage` — six demo
-subscriptions with real-world brand names as illustrative example data, no
-real accounts, no real money, no connection to any real service. This
-project is not affiliated with or endorsed by any company named on the page.
-Nothing is sent to a server; there is no server. Clearing site data resets
-the board.
+Everything lives in the browser's own `localStorage` — eight demo
+applications with fictional company names, no real inbox access, no real job
+board connection. Nothing is sent to a server; there is no server. Clearing
+site data resets the board.
 
 ## License
 

@@ -3,32 +3,21 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Roach Motel Exit — cancel subscriptions without the maze</title>
+<title>Ghosted — a job tracker that admits when you've been ghosted</title>
 <style>
   :root {
-    /* dataviz-skill validated dark palette (references/palette.md) */
-    --bg: #0d0d0d;              /* page plane, dark */
-    --panel: #1a1a19;           /* chart/card surface, dark */
-    --panel-2: #242423;         /* one step up, for inputs/hover */
+    --bg: #0d0d0d;
+    --panel: #1a1a19;
+    --panel-2: #242423;
     --border: rgba(255,255,255,0.10);
-    --text: #ffffff;            /* primary ink, dark */
-    --muted: #c3c2b7;           /* secondary ink, dark */
-    --faint: #898781;           /* muted axis/label ink */
-    --link: #3987e5;            /* categorical slot 1 (blue), dark step */
-
-    /* status palette — fixed, never themed, always paired with icon + label */
+    --text: #ffffff;
+    --muted: #c3c2b7;
+    --faint: #898781;
+    --link: #3987e5;
     --good: #0ca30c;
     --warning: #fab219;
     --serious: #ec835a;
-    --critical: #e66767;        /* categorical slot 8 red, dark — used as the "danger" accent */
-
-    /* categorical slots, fixed order, assigned to categories below */
-    --cat-1: #3987e5; /* blue */
-    --cat-2: #d95926; /* orange */
-    --cat-3: #199e70; /* aqua */
-    --cat-4: #c98500; /* yellow */
-    --cat-5: #d55181; /* magenta */
-    --cat-6: #008300; /* green */
+    --critical: #e66767;
   }
   * { box-sizing: border-box; }
   body {
@@ -51,7 +40,7 @@
   }
   .compare-card {
     flex: 1;
-    min-width: 180px;
+    min-width: 200px;
     background: var(--panel);
     border: 1px solid var(--border);
     border-radius: 12px;
@@ -75,15 +64,11 @@
   }
   p.stat-pill a { color: var(--warning); }
 
-  details.tech-details { margin-top: 4px; }
-  details.tech-details summary { cursor: pointer; color: var(--link); font-size: 0.82rem; }
-  details.tech-details .tech-body { margin-top: 8px; }
-
   .summary {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
     gap: 12px;
-    margin-bottom: 28px;
+    margin-bottom: 20px;
   }
   .stat-card {
     background: var(--panel);
@@ -91,13 +76,7 @@
     border-radius: 12px;
     padding: 16px 18px;
   }
-  .stat-card .label {
-    font-size: 0.72rem;
-    text-transform: uppercase;
-    letter-spacing: 0.04em;
-    color: var(--faint);
-    margin-bottom: 6px;
-  }
+  .stat-card .label { font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.04em; color: var(--faint); margin-bottom: 6px; }
   .stat-card .value { font-size: 1.6rem; font-weight: 700; font-variant-numeric: proportional-nums; }
   .stat-card.warn .value { color: var(--warning); }
   .stat-card.good .value { color: var(--good); }
@@ -109,12 +88,6 @@
     flex-wrap: wrap;
     align-items: center;
   }
-  .toolbar .reset-btn {
-    margin-left: auto;
-    color: var(--muted);
-    font-size: 0.82rem;
-  }
-  .toolbar .reset-btn:hover { color: var(--text); background: var(--panel-2); }
   input[type="text"], select {
     background: var(--panel-2);
     border: 1px solid var(--border);
@@ -124,6 +97,10 @@
     font-size: 0.9rem;
   }
   select { cursor: pointer; }
+  .toolbar .flag-btn { color: var(--serious); }
+  .toolbar .flag-btn:hover { background: color-mix(in srgb, var(--serious) 14%, transparent); }
+  .toolbar .reset-btn { margin-left: auto; color: var(--muted); font-size: 0.82rem; }
+  .toolbar .reset-btn:hover { color: var(--text); background: var(--panel-2); }
 
   .grid {
     display: grid;
@@ -134,26 +111,17 @@
   .card {
     background: var(--panel);
     border: 1px solid var(--border);
-    border-left: 3px solid var(--cat-color, var(--border));
     border-radius: 14px;
     padding: 16px 18px;
     display: flex;
     flex-direction: column;
     gap: 8px;
-    transition: opacity 0.2s;
   }
-  .card.canceled { opacity: 0.45; }
-  .card .row-top {
-    display: flex;
-    justify-content: space-between;
-    align-items: flex-start;
-  }
-  .card .name-row { display: flex; align-items: center; gap: 8px; }
-  .card .cat-icon { font-size: 1.15rem; line-height: 1; }
-  .card .name { font-weight: 700; font-size: 1.05rem; }
-  .card .category { color: var(--muted); font-size: 0.78rem; }
-  .card .price { font-size: 1.1rem; font-weight: 700; white-space: nowrap; font-variant-numeric: proportional-nums; }
-  .card .price span { font-size: 0.7rem; color: var(--muted); font-weight: 400; }
+  .card.dimmed { opacity: 0.55; }
+  .card .row-top { display: flex; justify-content: space-between; align-items: flex-start; gap: 8px; }
+  .card .company { font-weight: 700; font-size: 1.05rem; }
+  .card .role { color: var(--muted); font-size: 0.82rem; }
+  .card .days { font-size: 0.78rem; color: var(--faint); white-space: nowrap; }
 
   .badge {
     display: inline-flex;
@@ -165,114 +133,79 @@
     border: 1px solid var(--border);
     width: fit-content;
   }
-  .badge.status-active { color: var(--good); border-color: color-mix(in srgb, var(--good) 40%, transparent); background: color-mix(in srgb, var(--good) 12%, transparent); }
-  .badge.status-paused { color: var(--warning); border-color: color-mix(in srgb, var(--warning) 40%, transparent); background: color-mix(in srgb, var(--warning) 12%, transparent); }
-  .badge.status-canceled { color: var(--faint); }
-  .badge.usage-unused { color: var(--serious); border-color: color-mix(in srgb, var(--serious) 40%, transparent); background: color-mix(in srgb, var(--serious) 12%, transparent); }
-  .badge.usage-used { color: var(--faint); }
+  .badge.status-applied { color: var(--muted); }
+  .badge.status-interviewing { color: var(--good); border-color: color-mix(in srgb, var(--good) 40%, transparent); background: color-mix(in srgb, var(--good) 12%, transparent); }
+  .badge.status-offer { color: var(--good); border-color: color-mix(in srgb, var(--good) 55%, transparent); background: color-mix(in srgb, var(--good) 18%, transparent); font-weight: 700; }
+  .badge.status-rejected { color: var(--critical); border-color: color-mix(in srgb, var(--critical) 40%, transparent); background: color-mix(in srgb, var(--critical) 10%, transparent); }
+  .badge.status-ghosted { color: var(--serious); border-color: color-mix(in srgb, var(--serious) 40%, transparent); background: color-mix(in srgb, var(--serious) 12%, transparent); }
+  .badge.status-withdrawn { color: var(--faint); }
+  .badge.followup { color: var(--warning); border-color: color-mix(in srgb, var(--warning) 40%, transparent); background: color-mix(in srgb, var(--warning) 12%, transparent); }
 
   .card .meta { font-size: 0.8rem; color: var(--muted); }
-
-  .card-actions { display: flex; gap: 8px; margin-top: 4px; flex-wrap: wrap; }
-  button {
-    font-family: inherit;
-    font-size: 0.85rem;
-    border-radius: 8px;
-    padding: 7px 12px;
-    cursor: pointer;
-    border: 1px solid var(--border);
-    background: var(--panel-2);
-    color: var(--text);
+  .card select.status-select {
+    margin-top: 4px;
+    font-size: 0.82rem;
+    padding: 6px 8px;
   }
-  button.cancel-btn { border-color: color-mix(in srgb, var(--critical) 45%, transparent); color: var(--critical); }
-  button.cancel-btn:hover { background: color-mix(in srgb, var(--critical) 14%, transparent); }
-  button.resume-btn { border-color: color-mix(in srgb, var(--good) 45%, transparent); color: var(--good); }
-  button.resume-btn:hover { background: color-mix(in srgb, var(--good) 14%, transparent); }
-  button:disabled { opacity: 0.4; cursor: default; }
 
   .log {
     background: var(--panel);
     border: 1px solid var(--border);
     border-radius: 12px;
     padding: 14px 18px;
-    max-height: 240px;
+    max-height: 220px;
     overflow-y: auto;
   }
   .log h2 { font-size: 0.95rem; margin: 0 0 10px; color: var(--muted); }
   .log-entry { display: flex; gap: 8px; font-size: 0.82rem; padding: 5px 0; border-bottom: 1px dashed var(--border); color: var(--muted); }
   .log-entry:last-child { border-bottom: none; }
-  .log-entry .icon { flex-shrink: 0; }
   .log-entry .who { color: var(--link); font-weight: 600; }
   .log-entry .who.agent { color: var(--good); }
 
   footer { margin-top: 40px; color: var(--faint); font-size: 0.8rem; }
   footer a { color: var(--link); }
   footer code { color: var(--muted); }
-
-  /* Modal (the deliberate maze) */
-  .overlay {
-    position: fixed; inset: 0; background: rgba(0,0,0,0.6);
-    display: flex; align-items: center; justify-content: center;
-    z-index: 50; padding: 20px;
-  }
-  .modal {
-    background: var(--panel);
-    border: 1px solid var(--border);
-    border-radius: 16px;
-    max-width: 420px;
-    width: 100%;
-    padding: 24px;
-  }
-  .modal h3 { margin: 0 0 10px; font-size: 1.1rem; }
-  .modal p { color: var(--muted); font-size: 0.9rem; }
-  .step-dots { display: flex; gap: 6px; margin-bottom: 14px; }
-  .step-dots .dot { width: 20px; height: 4px; border-radius: 2px; background: var(--border); }
-  .step-dots .dot.done { background: var(--critical); }
-  .step-dots .dot.current { background: var(--warning); }
-  .modal textarea {
-    width: 100%; background: var(--panel-2); border: 1px solid var(--border);
-    color: var(--text); border-radius: 8px; padding: 10px; font-family: inherit;
-    font-size: 0.88rem; min-height: 70px; margin: 10px 0;
-  }
-  .modal .modal-actions { display: flex; flex-direction: column; gap: 8px; margin-top: 16px; }
-  .modal .modal-actions button { width: 100%; padding: 10px; }
-  .modal .btn-primary { background: var(--good); color: #06210a; border: none; font-weight: 600; }
-  .modal .btn-danger-link { background: none; border: none; color: var(--muted); text-decoration: underline; font-size: 0.82rem; padding: 4px; }
+  details.tech-details { margin-top: 4px; }
+  details.tech-details summary { cursor: pointer; color: var(--link); font-size: 0.82rem; }
+  details.tech-details .tech-body { margin-top: 8px; }
 </style>
 </head>
 <body>
 <div class="wrap">
   <header>
-    <h1>🪳 Roach Motel Exit</h1>
-    <p class="tagline">Cancelling should be one click. Businesses make it a maze on purpose — try it below.</p>
+    <h1>👻 Ghosted</h1>
+    <p class="tagline">A job application tracker that admits when a company has gone silent — and an agent that does the checking for you.</p>
     <div class="compare-row">
       <div class="compare-card">
         <div class="compare-icon">🙋</div>
-        <div class="compare-label">You click Cancel</div>
-        <div class="compare-sub">3-step maze: retention offer, guilt, forced reason</div>
+        <div class="compare-label">You check each one by hand</div>
+        <div class="compare-sub">Open every application, do the date math, guess who's ghosting you</div>
       </div>
       <div class="compare-vs">vs</div>
       <div class="compare-card good">
         <div class="compare-icon">🤖</div>
-        <div class="compare-label">Agent calls the tool</div>
-        <div class="compare-sub">Done instantly — no maze, no retention offer</div>
+        <div class="compare-label">Agent flags every stale one</div>
+        <div class="compare-sub">One tool call — done, with a real answer instead of a guess</div>
       </div>
     </div>
-    <p class="stat-pill">⚠ On average: 6.2 dark patterns, 6.7 clicks to cancel — bad enough the US FTC made a
-      <a href="https://www.ftc.gov/legal-library/browse/rules/negative-option-rule" target="_blank" rel="noopener">"Click to Cancel"</a> rule about it.</p>
+    <p class="stat-pill">⚠ 53% of job seekers were ghosted by an employer in the past year, and it now takes ~40 applications to land one interview.</p>
   </header>
 
   <section class="summary" id="summary"></section>
 
   <div class="toolbar">
-    <input type="text" id="searchInput" placeholder="Search subscriptions…" />
+    <input type="text" id="searchInput" placeholder="Search company or role…" />
     <select id="statusFilter">
       <option value="">All statuses</option>
-      <option value="active">Active</option>
-      <option value="paused">Paused</option>
-      <option value="canceled">Canceled</option>
+      <option value="applied">Applied</option>
+      <option value="interviewing">Interviewing</option>
+      <option value="offer">Offer</option>
+      <option value="rejected">Rejected</option>
+      <option value="ghosted">Ghosted</option>
+      <option value="withdrawn">Withdrawn</option>
     </select>
-    <button id="resetBtn" class="reset-btn" title="Put every subscription back to its starting state">↺ Reset demo</button>
+    <button id="flagBtn" class="flag-btn">👻 Flag stale applications</button>
+    <button id="resetBtn" class="reset-btn" title="Put every application back to its starting state">↺ Reset demo</button>
   </div>
 
   <div class="grid" id="grid"></div>
@@ -283,59 +216,32 @@
   </div>
 
   <footer>
-    Fake data, real page — nothing here connects to a real account. MIT licensed.
+    Fake data, real page — nothing here connects to a real inbox or job board. MIT licensed.
     <details class="tech-details">
       <summary>Technical details</summary>
       <div class="tech-body">
         Everything lives in this browser's <code>localStorage</code> — no server,
-        no real subscriptions, no real money, no connection to any real account.
-        Brand names are illustrative example data only; this project is not
-        affiliated with or endorsed by any company named on this page. Eight
-        WebMCP tools: <code>list_subscriptions</code>, <code>get_subscription</code>,
-        <code>search_subscriptions</code>, <code>get_savings_summary</code>,
-        <code>cancel_subscription</code>, <code>pause_subscription</code>,
-        <code>resume_subscription</code>, <code>cancel_all_unused</code>.
+        no real applications, no email access. Company names are fictional.
+        Eight WebMCP tools: <code>log_application</code>, <code>get_application</code>,
+        <code>list_applications</code>, <code>search_applications</code>,
+        <code>update_status</code>, <code>flag_stale_applications</code>,
+        <code>get_followup_reminders</code>, <code>get_pipeline_summary</code>.
       </div>
     </details>
   </footer>
-</div>
-
-<div class="overlay" id="overlay" style="display:none;">
-  <div class="modal" id="modalBody"></div>
 </div>
 
 <script>
 (function () {
   "use strict";
 
-  var STORAGE_KEY = "roach_motel_exit_v2";
+  var STORAGE_KEY = "ghosted_v1";
+  var GHOST_THRESHOLD_DAYS = 21;
+  var FOLLOWUP_MIN_DAYS = 7;
 
-  var SEED = [
-    { id: "netflix", name: "Netflix", category: "Streaming", price: 17.99, renewalDate: addDays(9), usage: "used", lastActive: "today", status: "active" },
-    { id: "spotify", name: "Spotify Premium", category: "Music", price: 11.99, renewalDate: addDays(14), usage: "used", lastActive: "today", status: "active" },
-    { id: "claudepro", name: "Claude Pro", category: "AI Tools", price: 20.00, renewalDate: addDays(6), usage: "used", lastActive: "today", status: "active" },
-    { id: "amazonprime", name: "Amazon Prime", category: "Shopping", price: 14.99, renewalDate: addDays(4), usage: "unused", lastActive: "45 days ago", status: "active" },
-    { id: "adobecc", name: "Adobe Creative Cloud", category: "Software", price: 59.99, renewalDate: addDays(21), usage: "unused", lastActive: "70 days ago", status: "active" },
-    { id: "psplus", name: "PlayStation Plus", category: "Gaming", price: 17.99, renewalDate: addDays(2), usage: "unused", lastActive: "95 days ago", status: "active" }
-  ];
-
-  // categorical palette assigned in fixed slot order (dataviz-skill rule:
-  // never cycled / reassigned by rank) — one slot per category, plus an icon.
-  var CATEGORY_STYLE = {
-    "Streaming": { color: "var(--cat-1)", icon: "🎬" },
-    "Music": { color: "var(--cat-2)", icon: "🎵" },
-    "AI Tools": { color: "var(--cat-3)", icon: "🤖" },
-    "Shopping": { color: "var(--cat-4)", icon: "🛒" },
-    "Software": { color: "var(--cat-5)", icon: "🎨" },
-    "Gaming": { color: "var(--cat-6)", icon: "🎮" }
-  };
-  function categoryStyle(category) {
-    return CATEGORY_STYLE[category] || { color: "var(--border)", icon: "📦" };
-  }
-
-  function addDays(n) {
+  function daysAgo(n) {
     var d = new Date();
-    d.setDate(d.getDate() + n);
+    d.setDate(d.getDate() - n);
     return d.toISOString().slice(0, 10);
   }
 
@@ -343,45 +249,58 @@
     return new Date().toISOString().slice(0, 10);
   }
 
+  function daysSince(isoDate) {
+    var then = new Date(isoDate + "T00:00:00");
+    var now = new Date();
+    now.setHours(0, 0, 0, 0);
+    return Math.round((now - then) / 86400000);
+  }
+
+  var SEED = [
+    { id: "northwind", company: "Northwind Data", role: "Data Analyst", url: "", dateApplied: daysAgo(45), status: "applied" },
+    { id: "kestrel", company: "Kestrel Software", role: "Frontend Engineer", url: "", dateApplied: daysAgo(28), status: "applied" },
+    { id: "meridian", company: "Meridian Labs", role: "Product Designer", url: "", dateApplied: daysAgo(15), status: "applied" },
+    { id: "cobalt", company: "Cobalt Systems", role: "Backend Engineer", url: "", dateApplied: daysAgo(9), status: "applied" },
+    { id: "brightside", company: "Brightside Health", role: "UX Researcher", url: "", dateApplied: daysAgo(3), status: "applied" },
+    { id: "fielding", company: "Fielding & Vance", role: "Marketing Manager", url: "", dateApplied: daysAgo(20), status: "interviewing" },
+    { id: "anchor", company: "Anchor Robotics", role: "Ops Analyst", url: "", dateApplied: daysAgo(35), status: "rejected" },
+    { id: "lumen", company: "Lumen Analytics", role: "Senior Engineer", url: "", dateApplied: daysAgo(12), status: "offer" }
+  ];
+
   function load() {
     try {
       var raw = localStorage.getItem(STORAGE_KEY);
-      if (!raw) return { subs: clone(SEED), log: [] };
+      if (!raw) return { apps: clone(SEED), log: [] };
       var parsed = JSON.parse(raw);
-      if (!parsed.subs) return { subs: clone(SEED), log: [] };
+      if (!parsed.apps) return { apps: clone(SEED), log: [] };
       return parsed;
     } catch (e) {
-      return { subs: clone(SEED), log: [] };
+      return { apps: clone(SEED), log: [] };
     }
   }
 
-  function save() {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
-  }
-
+  function save() { localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); }
   function clone(x) { return JSON.parse(JSON.stringify(x)); }
 
   var state = load();
 
-  function findSub(idOrName) {
-    if (!idOrName) return null;
-    var q = String(idOrName).trim().toLowerCase();
-    return state.subs.find(function (s) {
-      return s.id.toLowerCase() === q || s.name.toLowerCase() === q;
-    }) || state.subs.find(function (s) {
-      return s.name.toLowerCase().indexOf(q) !== -1;
+  function findApp(idOrCompany) {
+    if (!idOrCompany) return null;
+    var q = String(idOrCompany).trim().toLowerCase();
+    return state.apps.find(function (a) {
+      return a.id.toLowerCase() === q || a.company.toLowerCase() === q;
+    }) || state.apps.find(function (a) {
+      return a.company.toLowerCase().indexOf(q) !== -1 || a.role.toLowerCase().indexOf(q) !== -1;
     }) || null;
   }
 
-  var LOG_ICONS = { canceled: "🚫", paused: "⏸", resumed: "▶" };
-
-  function addLog(who, action, text) {
-    state.log.unshift({ who: who, action: action, text: text, at: new Date().toISOString() });
+  function addLog(who, text) {
+    state.log.unshift({ who: who, text: text, at: new Date().toISOString() });
     state.log = state.log.slice(0, 40);
   }
 
-  function money(n) {
-    return "$" + n.toFixed(2);
+  function slugify(s) {
+    return String(s).toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, "") || "app";
   }
 
   // ---------- rendering ----------
@@ -392,16 +311,6 @@
     renderLog();
   }
 
-  function renderSummary() {
-    var summary = computeSavingsSummary();
-    var el = document.getElementById("summary");
-    el.innerHTML =
-      statCard("Monthly spend", money(summary.monthlyTotal), "") +
-      statCard("Unused, still billed", money(summary.unusedMonthlyTotal), summary.unusedMonthlyTotal > 0 ? "warn" : "") +
-      statCard("Active subscriptions", String(summary.activeCount), "") +
-      statCard("If you canceled the unused ones", money(summary.potentialAnnualSavings) + "/yr", summary.potentialAnnualSavings > 0 ? "good" : "");
-  }
-
   function statCard(label, value, cls) {
     return '<div class="stat-card ' + (cls || "") + '">' +
       '<div class="label">' + escapeHtml(label) + '</div>' +
@@ -409,84 +318,77 @@
       '</div>';
   }
 
+  function renderSummary() {
+    var summary = computePipelineSummary();
+    var el = document.getElementById("summary");
+    el.innerHTML =
+      statCard("Total applications", String(summary.total), "") +
+      statCard("Response rate", summary.responseRate + "%", summary.responseRate >= 30 ? "good" : "") +
+      statCard("Ghosted", String(summary.ghostedCount), summary.ghostedCount > 0 ? "warn" : "") +
+      statCard("Awaiting follow-up", String(summary.followupCount), summary.followupCount > 0 ? "warn" : "");
+  }
+
+  var STATUS_OPTIONS = ["applied", "interviewing", "offer", "rejected", "ghosted", "withdrawn"];
+  var STATUS_ICON = { applied: "○", interviewing: "◐", offer: "🎉", rejected: "✕", ghosted: "👻", withdrawn: "—" };
+
   function renderGrid() {
     var q = document.getElementById("searchInput").value.trim().toLowerCase();
     var statusFilter = document.getElementById("statusFilter").value;
     var el = document.getElementById("grid");
 
-    var subs = state.subs.filter(function (s) {
-      var matchesQ = !q || s.name.toLowerCase().indexOf(q) !== -1 || s.category.toLowerCase().indexOf(q) !== -1;
-      var matchesStatus = !statusFilter || s.status === statusFilter;
+    var apps = state.apps.filter(function (a) {
+      var matchesQ = !q || a.company.toLowerCase().indexOf(q) !== -1 || a.role.toLowerCase().indexOf(q) !== -1;
+      var matchesStatus = !statusFilter || a.status === statusFilter;
       return matchesQ && matchesStatus;
     });
 
-    if (subs.length === 0) {
-      el.innerHTML = '<p style="color: var(--muted);">No subscriptions match.</p>';
+    if (apps.length === 0) {
+      el.innerHTML = '<p style="color: var(--muted);">No applications match.</p>';
       return;
     }
 
-    el.innerHTML = subs.map(renderCard).join("");
+    el.innerHTML = apps.map(renderCard).join("");
 
-    subs.forEach(function (s) {
-      var cancelBtn = document.getElementById("cancel-" + s.id);
-      if (cancelBtn) cancelBtn.addEventListener("click", function () { openCancelMaze(s.id); });
-      var pauseBtn = document.getElementById("pause-" + s.id);
-      if (pauseBtn) pauseBtn.addEventListener("click", function () { pauseSubscription({ id_or_name: s.id }, "you"); render(); });
-      var resumeBtn = document.getElementById("resume-" + s.id);
-      if (resumeBtn) resumeBtn.addEventListener("click", function () { resumeSubscription({ id_or_name: s.id }, "you"); render(); });
+    apps.forEach(function (a) {
+      var sel = document.getElementById("status-" + a.id);
+      if (sel) sel.addEventListener("change", function () {
+        updateStatus({ id_or_company: a.id, status: sel.value }, "you");
+        render();
+      });
     });
   }
 
-  function renderCard(s) {
-    var isCanceled = s.status === "canceled";
-    var isPaused = s.status === "paused";
-    var cat = categoryStyle(s.category);
+  function renderCard(a) {
+    var dimmed = a.status === "rejected" || a.status === "withdrawn" || a.status === "ghosted";
+    var days = daysSince(a.dateApplied);
+    var isFollowup = a.status === "applied" && days >= FOLLOWUP_MIN_DAYS && days < GHOST_THRESHOLD_DAYS;
 
-    var usageBadge = s.usage === "unused"
-      ? '<span class="badge usage-unused">⚠ Unused · ' + escapeHtml(s.lastActive) + '</span>'
-      : '<span class="badge usage-used">Active use · ' + escapeHtml(s.lastActive) + '</span>';
+    var options = STATUS_OPTIONS.map(function (s) {
+      return '<option value="' + s + '" ' + (s === a.status ? "selected" : "") + '>' + s + '</option>';
+    }).join("");
 
-    var statusIcon = isCanceled ? "✕" : (isPaused ? "⏸" : "●");
-    var statusBadge = '<span class="badge status-' + s.status + '">' + statusIcon + ' ' + s.status + '</span>';
-
-    var actions;
-    if (isCanceled) {
-      actions = '<div class="card-actions"><button disabled>Canceled</button></div>';
-    } else if (isPaused) {
-      actions = '<div class="card-actions">' +
-        '<button class="resume-btn" id="resume-' + s.id + '">Resume</button>' +
-        '<button class="cancel-btn" id="cancel-' + s.id + '">Cancel</button>' +
-        '</div>';
-    } else {
-      actions = '<div class="card-actions">' +
-        '<button class="cancel-btn" id="cancel-' + s.id + '">Cancel</button>' +
-        '<button id="pause-' + s.id + '">Pause</button>' +
-        '</div>';
-    }
-
-    return '<div class="card ' + (isCanceled ? "canceled" : "") + '" style="--cat-color: ' + cat.color + ';">' +
+    return '<div class="card ' + (dimmed ? "dimmed" : "") + '">' +
       '<div class="row-top">' +
-        '<div class="name-row">' +
-          '<span class="cat-icon">' + cat.icon + '</span>' +
-          '<div><div class="name">' + escapeHtml(s.name) + '</div><div class="category">' + escapeHtml(s.category) + '</div></div>' +
-        '</div>' +
-        '<div class="price">' + money(s.price) + '<span> /mo</span></div>' +
+        '<div><div class="company">' + escapeHtml(a.company) + '</div><div class="role">' + escapeHtml(a.role) + '</div></div>' +
+        '<div class="days">' + days + 'd ago</div>' +
       '</div>' +
-      '<div>' + statusBadge + ' ' + usageBadge + '</div>' +
-      '<div class="meta">' + (isCanceled ? "Canceled" : "Renews") + ' ' + escapeHtml(s.renewalDate) + '</div>' +
-      actions +
+      '<div>' +
+        '<span class="badge status-' + a.status + '">' + STATUS_ICON[a.status] + ' ' + a.status + '</span>' +
+        (isFollowup ? ' <span class="badge followup">⏰ follow up</span>' : '') +
+      '</div>' +
+      '<div class="meta">Applied ' + escapeHtml(a.dateApplied) + '</div>' +
+      '<select class="status-select" id="status-' + a.id + '">' + options + '</select>' +
       '</div>';
   }
 
   function renderLog() {
     var el = document.getElementById("logList");
     if (state.log.length === 0) {
-      el.innerHTML = '<div class="log-entry">Nothing yet. Cancel something by hand, or have an agent do it.</div>';
+      el.innerHTML = '<div class="log-entry">Nothing yet. Log an application by hand, or have an agent do it.</div>';
       return;
     }
     el.innerHTML = state.log.map(function (entry) {
-      var icon = LOG_ICONS[entry.action] || "•";
-      return '<div class="log-entry"><span class="icon">' + icon + '</span><span class="who ' + (entry.who === "agent" ? "agent" : "") + '">' +
+      return '<div class="log-entry"><span class="who ' + (entry.who === "agent" ? "agent" : "") + '">' +
         (entry.who === "agent" ? "Agent" : "You") + '</span> — ' + escapeHtml(entry.text) + '</div>';
     }).join("");
   }
@@ -497,183 +399,102 @@
     });
   }
 
-  // ---------- the deliberate human maze ----------
-  // Mirrors real "Roach Motel" cancellation flows: a retention offer, a guilt
-  // step, and a mandatory reason before the cancellation is honored. An agent
-  // calling cancel_subscription skips all three because the tool is the real
-  // exit, not a UI element that can be buried.
-
-  var mazeState = null;
-
-  function openCancelMaze(id) {
-    var sub = findSub(id);
-    if (!sub) return;
-    mazeState = { id: id, step: 1 };
-    renderMaze();
-  }
-
-  function closeMaze() {
-    mazeState = null;
-    document.getElementById("overlay").style.display = "none";
-  }
-
-  function stepDots(current) {
-    var dots = [1, 2, 3].map(function (n) {
-      var cls = n < current ? "done" : (n === current ? "current" : "");
-      return '<span class="dot ' + cls + '"></span>';
-    });
-    return '<div class="step-dots">' + dots.join("") + '</div>';
-  }
-
-  function renderMaze() {
-    var overlay = document.getElementById("overlay");
-    var body = document.getElementById("modalBody");
-    if (!mazeState) { overlay.style.display = "none"; return; }
-    overlay.style.display = "flex";
-    var sub = findSub(mazeState.id);
-    if (!sub) { closeMaze(); return; }
-
-    if (mazeState.step === 1) {
-      body.innerHTML =
-        stepDots(1) +
-        '<h3>Wait — before you go</h3>' +
-        '<p>Here\'s 50% off ' + escapeHtml(sub.name) + ' for the next 3 months. Most people who see this offer stay.</p>' +
-        '<div class="modal-actions">' +
-          '<button class="btn-primary" id="mazeKeep">Keep my discount</button>' +
-          '<button class="btn-danger-link" id="mazeNext">No thanks, continue to cancel</button>' +
-        '</div>';
-      document.getElementById("mazeKeep").onclick = closeMaze;
-      document.getElementById("mazeNext").onclick = function () { mazeState.step = 2; renderMaze(); };
-    } else if (mazeState.step === 2) {
-      body.innerHTML =
-        stepDots(2) +
-        '<h3>Are you sure?</h3>' +
-        '<p>You\'ll lose access to ' + escapeHtml(sub.name) + ' immediately and lose your saved data.</p>' +
-        '<div class="modal-actions">' +
-          '<button class="btn-primary" id="mazeNevermind">Never mind, keep it</button>' +
-          '<button class="btn-danger-link" id="mazeNext2">Yes, I\'m sure</button>' +
-        '</div>';
-      document.getElementById("mazeNevermind").onclick = closeMaze;
-      document.getElementById("mazeNext2").onclick = function () { mazeState.step = 3; renderMaze(); };
-    } else {
-      body.innerHTML =
-        stepDots(3) +
-        '<h3>Tell us why you\'re leaving</h3>' +
-        '<p>Required before we can process your cancellation.</p>' +
-        '<textarea id="mazeReason" placeholder="Your reason…"></textarea>' +
-        '<div class="modal-actions">' +
-          '<button class="btn-primary" id="mazeSubmit" disabled>Submit and cancel</button>' +
-          '<button class="btn-danger-link" id="mazeBack">Back</button>' +
-        '</div>';
-      var textarea = document.getElementById("mazeReason");
-      var submitBtn = document.getElementById("mazeSubmit");
-      textarea.addEventListener("input", function () {
-        submitBtn.disabled = textarea.value.trim().length === 0;
-      });
-      submitBtn.onclick = function () {
-        cancelSubscription({ id_or_name: mazeState.id, reason: textarea.value.trim() }, "you");
-        closeMaze();
-        render();
-      };
-      document.getElementById("mazeBack").onclick = closeMaze;
-    }
-  }
-
   // ---------- core actions (shared by human UI and WebMCP tools) ----------
 
-  function listSubscriptions(args) {
+  function logApplication(args, who) {
     args = args || {};
-    var subs = state.subs;
-    if (args.status) subs = subs.filter(function (s) { return s.status === args.status; });
-    return subs;
+    if (!args.company || !args.role) return { error: "company and role are both required." };
+    var app = {
+      id: slugify(args.company) + "-" + Date.now().toString(36).slice(-4),
+      company: args.company,
+      role: args.role,
+      url: args.url || "",
+      dateApplied: args.date_applied || todayISO(),
+      status: "applied",
+      notes: args.notes || ""
+    };
+    state.apps.unshift(app);
+    addLog(who || "agent", "logged application to " + app.company + " (" + app.role + ")");
+    save();
+    return { application: app, message: "Logged " + app.company + " — " + app.role + "." };
   }
 
-  function getSubscription(args) {
-    var sub = findSub(args && args.id_or_name);
-    return sub || null;
+  function getApplication(args) {
+    return findApp(args && args.id_or_company) || null;
   }
 
-  function searchSubscriptions(args) {
+  function listApplications(args) {
+    args = args || {};
+    var apps = state.apps;
+    if (args.status) apps = apps.filter(function (a) { return a.status === args.status; });
+    return apps;
+  }
+
+  function searchApplications(args) {
     args = args || {};
     var q = (args.query || "").toLowerCase();
-    return state.subs.filter(function (s) {
-      var matchesQ = !q ||
-        s.name.toLowerCase().indexOf(q) !== -1 ||
-        s.category.toLowerCase().indexOf(q) !== -1;
-      var matchesCategory = !args.category || s.category.toLowerCase() === String(args.category).toLowerCase();
-      var matchesStatus = !args.status || s.status === args.status;
-      return matchesQ && matchesCategory && matchesStatus;
+    return state.apps.filter(function (a) {
+      var matchesQ = !q || a.company.toLowerCase().indexOf(q) !== -1 || a.role.toLowerCase().indexOf(q) !== -1;
+      var matchesStatus = !args.status || a.status === args.status;
+      return matchesQ && matchesStatus;
     });
   }
 
-  function round2(n) { return Math.round(n * 100) / 100; }
-
-  function computeSavingsSummary() {
-    var active = state.subs.filter(function (s) { return s.status !== "canceled"; });
-    var monthlyTotal = active.reduce(function (sum, s) { return sum + s.price; }, 0);
-    var unused = active.filter(function (s) { return s.usage === "unused"; });
-    var unusedMonthlyTotal = unused.reduce(function (sum, s) { return sum + s.price; }, 0);
-    return {
-      monthlyTotal: round2(monthlyTotal),
-      unusedMonthlyTotal: round2(unusedMonthlyTotal),
-      unusedCount: unused.length,
-      activeCount: active.filter(function (s) { return s.status === "active"; }).length,
-      potentialAnnualSavings: round2(unusedMonthlyTotal * 12)
-    };
-  }
-
-  function cancelSubscription(args, who) {
-    var sub = findSub(args && args.id_or_name);
-    if (!sub) return { error: "No subscription matches '" + (args && args.id_or_name) + "'." };
-    if (sub.status === "canceled") return { error: sub.name + " is already canceled." };
-    sub.status = "canceled";
-    sub.canceledAt = todayISO();
-    addLog(who || "agent", "canceled", "canceled " + sub.name +
-      (args && args.reason ? ' — reason: "' + args.reason + '"' : ""));
+  function updateStatus(args, who) {
+    var app = findApp(args && args.id_or_company);
+    if (!app) return { error: "No application matches '" + (args && args.id_or_company) + "'." };
+    if (STATUS_OPTIONS.indexOf(args.status) === -1) return { error: "Status must be one of: " + STATUS_OPTIONS.join(", ") + "." };
+    var prev = app.status;
+    app.status = args.status;
+    addLog(who || "agent", "moved " + app.company + " from " + prev + " to " + args.status +
+      (args.note ? ' — "' + args.note + '"' : ""));
     save();
-    return { subscription: sub, message: sub.name + " canceled, effective immediately. No retention offer, no maze." };
+    return { application: app, message: app.company + " is now " + args.status + "." };
   }
 
-  function pauseSubscription(args, who) {
-    var sub = findSub(args && args.id_or_name);
-    if (!sub) return { error: "No subscription matches '" + (args && args.id_or_name) + "'." };
-    if (sub.status !== "active") return { error: sub.name + " isn't active, so it can't be paused." };
-    sub.status = "paused";
-    sub.resumeInDays = args && args.resume_in_days ? args.resume_in_days : 30;
-    addLog(who || "agent", "paused", "paused " + sub.name + " (resumes in " + sub.resumeInDays + " days)");
-    save();
-    return { subscription: sub, message: sub.name + " paused for " + sub.resumeInDays + " days." };
-  }
-
-  function resumeSubscription(args, who) {
-    var sub = findSub(args && args.id_or_name);
-    if (!sub) return { error: "No subscription matches '" + (args && args.id_or_name) + "'." };
-    if (sub.status !== "paused") return { error: sub.name + " isn't paused, so it can't be resumed." };
-    sub.status = "active";
-    delete sub.resumeInDays;
-    addLog(who || "agent", "resumed", "resumed " + sub.name);
-    save();
-    return { subscription: sub, message: sub.name + " is active again." };
-  }
-
-  function cancelAllUnused(who) {
-    var targets = state.subs.filter(function (s) { return s.status === "active" && s.usage === "unused"; });
-    if (targets.length === 0) return { canceled: [], message: "Nothing to cancel — no active subscription is currently flagged unused." };
-    var canceledNames = [];
-    var totalMonthly = 0;
-    targets.forEach(function (s) {
-      s.status = "canceled";
-      s.canceledAt = todayISO();
-      canceledNames.push(s.name);
-      totalMonthly += s.price;
+  function flagStaleApplications(args, who) {
+    args = args || {};
+    var threshold = args.threshold_days || GHOST_THRESHOLD_DAYS;
+    var targets = state.apps.filter(function (a) {
+      return a.status === "applied" && daysSince(a.dateApplied) >= threshold;
     });
-    addLog(who || "agent", "canceled", "bulk-canceled " + targets.length + " unused subscriptions: " + canceledNames.join(", "));
+    if (targets.length === 0) return { flagged: [], message: "Nothing to flag — no application has gone " + threshold + "+ days without a response." };
+    var names = [];
+    targets.forEach(function (a) {
+      a.status = "ghosted";
+      names.push(a.company);
+    });
+    addLog(who || "agent", "flagged " + targets.length + " application(s) as ghosted: " + names.join(", "));
     save();
+    return { flagged: names, count: targets.length, message: "Flagged " + targets.length + " application(s) as ghosted (" + threshold + "+ days silent): " + names.join(", ") + "." };
+  }
+
+  function getFollowupReminders() {
+    return state.apps.filter(function (a) {
+      var days = daysSince(a.dateApplied);
+      return a.status === "applied" && days >= FOLLOWUP_MIN_DAYS && days < GHOST_THRESHOLD_DAYS;
+    }).map(function (a) {
+      return { id: a.id, company: a.company, role: a.role, daysSinceApplied: daysSince(a.dateApplied) };
+    });
+  }
+
+  function round1(n) { return Math.round(n * 10) / 10; }
+
+  function computePipelineSummary() {
+    var total = state.apps.length;
+    var byStatus = {};
+    STATUS_OPTIONS.forEach(function (s) { byStatus[s] = 0; });
+    state.apps.forEach(function (a) { byStatus[a.status] = (byStatus[a.status] || 0) + 1; });
+    var responded = byStatus.interviewing + byStatus.offer + byStatus.rejected;
+    var responseRate = total > 0 ? round1((responded / total) * 100) : 0;
+    var ghostRate = total > 0 ? round1((byStatus.ghosted / total) * 100) : 0;
     return {
-      canceled: canceledNames,
-      monthlySavings: round2(totalMonthly),
-      annualSavings: round2(totalMonthly * 12),
-      message: "Canceled " + targets.length + " unused subscription(s) (" + canceledNames.join(", ") + "), saving " + money(round2(totalMonthly)) + "/mo — " + money(round2(totalMonthly * 12)) + "/yr."
+      total: total,
+      byStatus: byStatus,
+      responseRate: responseRate,
+      ghostRate: ghostRate,
+      ghostedCount: byStatus.ghosted,
+      followupCount: getFollowupReminders().length
     };
   }
 
@@ -685,77 +506,83 @@
     }
 
     document.modelContext.registerTool({
-      name: "list_subscriptions",
-      description: "List all subscriptions, optionally filtered by status (active, paused, canceled).",
+      name: "log_application",
+      description: "Log a new job application. Call this the moment an application is submitted so it's tracked immediately, not re-entered later.",
       inputSchema: {
         type: "object",
         properties: {
-          status: { type: "string", enum: ["active", "paused", "canceled"], description: "Filter by status. Omit to list all." }
+          company: { type: "string", description: "Company name." },
+          role: { type: "string", description: "Job title applied for." },
+          url: { type: "string", description: "Link to the job posting, if any." },
+          date_applied: { type: "string", description: "ISO date (YYYY-MM-DD). Defaults to today." },
+          notes: { type: "string", description: "Optional notes." }
+        },
+        required: ["company", "role"]
+      },
+      async execute(args) {
+        var result = logApplication(args, "agent");
+        render();
+        if (result.error) return { content: [{ type: "text", text: result.error }], isError: true };
+        return { content: [{ type: "text", text: result.message }] };
+      }
+    });
+
+    document.modelContext.registerTool({
+      name: "get_application",
+      description: "Get full details for one application, matched by id or company name.",
+      inputSchema: {
+        type: "object",
+        properties: { id_or_company: { type: "string", description: "Application id or company name." } },
+        required: ["id_or_company"]
+      },
+      async execute(args) {
+        var app = getApplication(args);
+        if (!app) return { content: [{ type: "text", text: "No application found for '" + args.id_or_company + "'." }], isError: true };
+        return { content: [{ type: "text", text: JSON.stringify(app, null, 2) }] };
+      }
+    });
+
+    document.modelContext.registerTool({
+      name: "list_applications",
+      description: "List all applications, optionally filtered by status (applied, interviewing, offer, rejected, ghosted, withdrawn).",
+      inputSchema: {
+        type: "object",
+        properties: { status: { type: "string", enum: STATUS_OPTIONS } }
+      },
+      async execute(args) {
+        return { content: [{ type: "text", text: JSON.stringify(listApplications(args), null, 2) }] };
+      }
+    });
+
+    document.modelContext.registerTool({
+      name: "search_applications",
+      description: "Search applications by free text (company or role) and/or status.",
+      inputSchema: {
+        type: "object",
+        properties: {
+          query: { type: "string" },
+          status: { type: "string", enum: STATUS_OPTIONS }
         }
       },
       async execute(args) {
-        var subs = listSubscriptions(args);
-        return { content: [{ type: "text", text: JSON.stringify(subs, null, 2) }] };
+        return { content: [{ type: "text", text: JSON.stringify(searchApplications(args), null, 2) }] };
       }
     });
 
     document.modelContext.registerTool({
-      name: "get_subscription",
-      description: "Get full details for one subscription, matched by id or name.",
+      name: "update_status",
+      description: "Move an application to a new status, matched by id or company name.",
       inputSchema: {
         type: "object",
         properties: {
-          id_or_name: { type: "string", description: "Subscription id or name, e.g. 'netflix' or 'Netflix'." }
+          id_or_company: { type: "string" },
+          status: { type: "string", enum: STATUS_OPTIONS },
+          note: { type: "string", description: "Optional note about why." }
         },
-        required: ["id_or_name"]
+        required: ["id_or_company", "status"]
       },
       async execute(args) {
-        var sub = getSubscription(args);
-        if (!sub) return { content: [{ type: "text", text: "No subscription found for '" + args.id_or_name + "'." }], isError: true };
-        return { content: [{ type: "text", text: JSON.stringify(sub, null, 2) }] };
-      }
-    });
-
-    document.modelContext.registerTool({
-      name: "search_subscriptions",
-      description: "Search subscriptions by free text, category, or status.",
-      inputSchema: {
-        type: "object",
-        properties: {
-          query: { type: "string", description: "Free-text match against name and category." },
-          category: { type: "string", description: "Exact category, e.g. 'Streaming', 'Gaming'." },
-          status: { type: "string", enum: ["active", "paused", "canceled"] }
-        }
-      },
-      async execute(args) {
-        var subs = searchSubscriptions(args);
-        return { content: [{ type: "text", text: JSON.stringify(subs, null, 2) }] };
-      }
-    });
-
-    document.modelContext.registerTool({
-      name: "get_savings_summary",
-      description: "Get total monthly spend, spend on subscriptions unused for 30+ days, and potential annual savings if those were canceled.",
-      inputSchema: { type: "object", properties: {} },
-      async execute() {
-        var summary = computeSavingsSummary();
-        return { content: [{ type: "text", text: JSON.stringify(summary, null, 2) }] };
-      }
-    });
-
-    document.modelContext.registerTool({
-      name: "cancel_subscription",
-      description: "Cancel a subscription immediately, matched by id or name. Skips any retention flow — this is the real, honest cancel action, not a UI element that can be hidden.",
-      inputSchema: {
-        type: "object",
-        properties: {
-          id_or_name: { type: "string", description: "Subscription id or name to cancel." },
-          reason: { type: "string", description: "Optional reason for canceling." }
-        },
-        required: ["id_or_name"]
-      },
-      async execute(args) {
-        var result = cancelSubscription(args, "agent");
+        var result = updateStatus(args, "agent");
         render();
         if (result.error) return { content: [{ type: "text", text: result.error }], isError: true };
         return { content: [{ type: "text", text: result.message }] };
@@ -763,50 +590,34 @@
     });
 
     document.modelContext.registerTool({
-      name: "pause_subscription",
-      description: "Pause an active subscription instead of canceling it outright, matched by id or name.",
+      name: "flag_stale_applications",
+      description: "Mark every 'applied' application with no response for threshold_days (default 21) as ghosted, in one call, instead of checking each one by hand.",
       inputSchema: {
         type: "object",
-        properties: {
-          id_or_name: { type: "string", description: "Subscription id or name to pause." },
-          resume_in_days: { type: "number", description: "Days until the subscription should resume. Defaults to 30." }
-        },
-        required: ["id_or_name"]
+        properties: { threshold_days: { type: "number", description: "Days of silence before flagging. Defaults to 21." } }
       },
       async execute(args) {
-        var result = pauseSubscription(args, "agent");
-        render();
-        if (result.error) return { content: [{ type: "text", text: result.error }], isError: true };
-        return { content: [{ type: "text", text: result.message }] };
-      }
-    });
-
-    document.modelContext.registerTool({
-      name: "resume_subscription",
-      description: "Resume a paused subscription, matched by id or name, putting it back to active.",
-      inputSchema: {
-        type: "object",
-        properties: {
-          id_or_name: { type: "string", description: "Subscription id or name to resume." }
-        },
-        required: ["id_or_name"]
-      },
-      async execute(args) {
-        var result = resumeSubscription(args, "agent");
-        render();
-        if (result.error) return { content: [{ type: "text", text: result.error }], isError: true };
-        return { content: [{ type: "text", text: result.message }] };
-      }
-    });
-
-    document.modelContext.registerTool({
-      name: "cancel_all_unused",
-      description: "Cancel every active subscription currently flagged as unused (30+ days without use) in one call. Returns the list canceled and the resulting monthly/annual savings.",
-      inputSchema: { type: "object", properties: {} },
-      async execute() {
-        var result = cancelAllUnused("agent");
+        var result = flagStaleApplications(args, "agent");
         render();
         return { content: [{ type: "text", text: JSON.stringify(result, null, 2) }] };
+      }
+    });
+
+    document.modelContext.registerTool({
+      name: "get_followup_reminders",
+      description: "List applications that are 7-20 days old with no response — the window where following up is worth it, before assuming you've been ghosted.",
+      inputSchema: { type: "object", properties: {} },
+      async execute() {
+        return { content: [{ type: "text", text: JSON.stringify(getFollowupReminders(), null, 2) }] };
+      }
+    });
+
+    document.modelContext.registerTool({
+      name: "get_pipeline_summary",
+      description: "Get total applications, response rate, ghost rate, and how many are awaiting follow-up.",
+      inputSchema: { type: "object", properties: {} },
+      async execute() {
+        return { content: [{ type: "text", text: JSON.stringify(computePipelineSummary(), null, 2) }] };
       }
     });
   }
@@ -815,13 +626,15 @@
 
   document.getElementById("searchInput").addEventListener("input", renderGrid);
   document.getElementById("statusFilter").addEventListener("change", renderGrid);
-  document.getElementById("overlay").addEventListener("click", function (e) {
-    if (e.target.id === "overlay") closeMaze();
+  document.getElementById("flagBtn").addEventListener("click", function () {
+    var result = flagStaleApplications({}, "you");
+    render();
+    if (!result.flagged.length) alert(result.message);
   });
   document.getElementById("resetBtn").addEventListener("click", function () {
-    var ok = window.confirm("Reset the demo? This clears every change (canceled, paused, log) and puts all subscriptions back to their starting state.");
+    var ok = window.confirm("Reset the demo? This clears every change and puts all applications back to their starting state.");
     if (!ok) return;
-    state = { subs: clone(SEED), log: [] };
+    state = { apps: clone(SEED), log: [] };
     save();
     document.getElementById("searchInput").value = "";
     document.getElementById("statusFilter").value = "";
