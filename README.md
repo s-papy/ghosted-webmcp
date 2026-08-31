@@ -54,6 +54,10 @@ and an activity history scoped to that one application or invoice — so an
 agent's action isn't just a line of text updating, it's something you can
 open and inspect afterward.
 
+The page itself is laid out as a persistent sidebar plus a full-width
+content area — the shape of a real product, not a single centered column
+that reads as a landing page.
+
 ## The tools
 
 **Job applications**
