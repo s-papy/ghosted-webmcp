@@ -488,6 +488,17 @@
     return Math.round((now - then) / 86400000);
   }
 
+  // JS's Date constructor silently rolls invalid components over into a
+  // neighboring valid date (e.g. "2026-02-30" -> March 2) instead of failing,
+  // so a plain isNaN(new Date(s)) check isn't enough to catch it.
+  function isValidISODate(s) {
+    var m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(s);
+    if (!m) return false;
+    var y = +m[1], mo = +m[2], d = +m[3];
+    var dt = new Date(y, mo - 1, d);
+    return dt.getFullYear() === y && dt.getMonth() === mo - 1 && dt.getDate() === d;
+  }
+
   var SEED = [
     { id: "northwind", company: "Northwind Data", role: "Data Analyst", url: "", dateApplied: daysAgo(45), status: "applied", respondedAt: null },
     { id: "kestrel", company: "Kestrel Software", role: "Frontend Engineer", url: "", dateApplied: daysAgo(28), status: "applied", respondedAt: null },
@@ -991,6 +1002,7 @@
   function logApplication(args, who) {
     args = args || {};
     if (!args.company || !args.role) return { error: "company and role are both required." };
+    if (args.date_applied && !isValidISODate(args.date_applied)) return { error: "date_applied must be a valid ISO date (YYYY-MM-DD), got '" + args.date_applied + "'." };
     var app = {
       id: slugify(args.company) + "-" + Date.now().toString(36).slice(-4),
       company: args.company,
@@ -1132,6 +1144,8 @@
     if (!args.client || !args.project || args.amount === undefined || args.amount === null) return { error: "client, project, and amount are all required." };
     var amountNum = Number(args.amount);
     if (!isFinite(amountNum) || amountNum <= 0) return { error: "amount must be a positive number, got '" + args.amount + "'." };
+    if (args.date_sent && !isValidISODate(args.date_sent)) return { error: "date_sent must be a valid ISO date (YYYY-MM-DD), got '" + args.date_sent + "'." };
+    if (args.due_date && !isValidISODate(args.due_date)) return { error: "due_date must be a valid ISO date (YYYY-MM-DD), got '" + args.due_date + "'." };
     var sentDate = args.date_sent || todayISO();
     var inv = {
       id: slugify(args.client) + "-" + Date.now().toString(36).slice(-4),
@@ -1303,7 +1317,7 @@
           company: { type: "string", description: "Company name." },
           role: { type: "string", description: "Job title applied for." },
           url: { type: "string", description: "Link to the job posting, if any." },
-          date_applied: { type: "string", description: "ISO date (YYYY-MM-DD). Defaults to today." },
+          date_applied: { type: "string", pattern: "^\\d{4}-\\d{2}-\\d{2}$", description: "ISO date (YYYY-MM-DD). Defaults to today." },
           notes: { type: "string", description: "Optional notes." }
         },
         required: ["company", "role"]
@@ -1429,8 +1443,8 @@
           client: { type: "string", description: "Client or company name." },
           project: { type: "string", description: "Short project description." },
           amount: { type: "number", exclusiveMinimum: 0, description: "Invoice amount in USD. Must be greater than 0." },
-          date_sent: { type: "string", description: "ISO date (YYYY-MM-DD). Defaults to today." },
-          due_date: { type: "string", description: "ISO date the payment is due. Defaults to date_sent." }
+          date_sent: { type: "string", pattern: "^\\d{4}-\\d{2}-\\d{2}$", description: "ISO date (YYYY-MM-DD). Defaults to today." },
+          due_date: { type: "string", pattern: "^\\d{4}-\\d{2}-\\d{2}$", description: "ISO date the payment is due. Defaults to date_sent." }
         },
         required: ["client", "project", "amount"]
       },
