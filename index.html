@@ -13,7 +13,8 @@
     --text: #ffffff;
     --muted: #c3c2b7;
     --faint: #898781;
-    --link: #3987e5;
+    --link: #9085e9;
+    --accent-ink: #150f2b;
     --good: #0ca30c;
     --warning: #fab219;
     --serious: #ec835a;
@@ -34,12 +35,18 @@
   header p.tagline { color: var(--muted); font-size: 1rem; max-width: 560px; margin: 0 0 18px; }
 
   .digest {
-    background: linear-gradient(135deg, color-mix(in srgb, var(--link) 10%, var(--panel)), var(--panel));
+    background: linear-gradient(135deg, color-mix(in srgb, var(--link) 14%, var(--panel)), var(--panel));
     border: 1px solid color-mix(in srgb, var(--link) 30%, var(--border));
     border-radius: 14px;
-    padding: 16px 20px;
+    padding: 20px 24px;
     margin-bottom: 22px;
   }
+  .digest-hero { display: flex; align-items: baseline; gap: 14px; margin-bottom: 14px; }
+  .digest-hero .hero-figure {
+    font-size: 3.2rem; font-weight: 800; line-height: 1;
+    color: var(--link); font-variant-numeric: proportional-nums;
+  }
+  .digest-hero .hero-caption { color: var(--muted); font-size: 0.92rem; }
   .digest .digest-title { font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.04em; color: var(--faint); margin-bottom: 10px; }
   .digest .digest-empty { color: var(--muted); font-size: 0.88rem; }
   .digest-row {
@@ -59,7 +66,7 @@
     padding: 9px 16px;
     font-weight: 600;
   }
-  .tab-btn.active { background: var(--link); color: #051225; border-color: var(--link); }
+  .tab-btn.active { background: var(--link); color: var(--accent-ink); border-color: var(--link); font-weight: 700; }
 
   p.context-line {
     color: var(--faint);
@@ -144,7 +151,9 @@
     gap: 8px;
     transition: transform 0.15s, box-shadow 0.15s;
   }
+  .card { cursor: pointer; }
   .card:hover { transform: translateY(-1px); box-shadow: 0 6px 18px rgba(0,0,0,0.35); }
+  .card select { cursor: pointer; }
   .card.dimmed { opacity: 0.55; }
   .card.flash-update { animation: flashUpdate 1.6s ease-out; }
   @keyframes flashUpdate {
@@ -212,6 +221,50 @@
   details.tech-details { margin-top: 4px; }
   details.tech-details summary { cursor: pointer; color: var(--link); font-size: 0.82rem; }
   details.tech-details .tech-body { margin-top: 8px; }
+
+  /* Card detail modal */
+  .overlay {
+    position: fixed; inset: 0; background: rgba(0,0,0,0.65);
+    display: flex; align-items: center; justify-content: center;
+    z-index: 50; padding: 20px;
+  }
+  .detail-modal {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    max-width: 460px;
+    width: 100%;
+    max-height: 85vh;
+    overflow-y: auto;
+    padding: 24px;
+  }
+  .detail-modal .detail-header { display: flex; align-items: center; gap: 12px; margin-bottom: 16px; }
+  .detail-modal .detail-avatar {
+    width: 44px; height: 44px; border-radius: 10px; flex-shrink: 0;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 1.2rem; font-weight: 700; color: #06111f;
+  }
+  .detail-modal .detail-name { font-size: 1.15rem; font-weight: 700; }
+  .detail-modal .detail-sub { color: var(--muted); font-size: 0.85rem; }
+  .detail-modal .detail-close {
+    margin-left: auto; background: none; border: none; color: var(--faint);
+    font-size: 1.3rem; cursor: pointer; padding: 4px 8px; line-height: 1;
+  }
+  .detail-modal .detail-close:hover { color: var(--text); }
+  .detail-facts {
+    display: grid; grid-template-columns: 1fr 1fr; gap: 10px;
+    background: var(--panel-2); border-radius: 10px; padding: 12px 14px;
+    margin-bottom: 16px;
+  }
+  .detail-facts .fact-label { font-size: 0.66rem; text-transform: uppercase; letter-spacing: 0.04em; color: var(--faint); }
+  .detail-facts .fact-value { font-size: 0.92rem; font-weight: 600; }
+  .detail-modal h4 { font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.04em; color: var(--faint); margin: 0 0 8px; }
+  .detail-actions { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 18px; }
+  .detail-actions button { font-size: 0.82rem; padding: 7px 12px; }
+  .detail-actions button.current { background: var(--link); color: var(--accent-ink); border-color: var(--link); font-weight: 700; cursor: default; }
+  .detail-history { max-height: 160px; overflow-y: auto; }
+  .detail-history .log-entry { font-size: 0.8rem; }
+  .detail-history .empty { color: var(--faint); font-size: 0.82rem; }
 </style>
 </head>
 <body>
@@ -308,6 +361,10 @@
   </footer>
 </div>
 
+<div class="overlay" id="detailOverlay" style="display:none;">
+  <div class="detail-modal" id="detailModalBody"></div>
+</div>
+
 <script>
 (function () {
   "use strict";
@@ -382,8 +439,8 @@
     }) || null;
   }
 
-  function addLog(who, text) {
-    state.log.unshift({ who: who, text: text, at: new Date().toISOString() });
+  function addLog(who, text, entityId) {
+    state.log.unshift({ who: who, text: text, at: new Date().toISOString(), entityId: entityId || null });
     state.log = state.log.slice(0, 40);
   }
 
@@ -416,8 +473,8 @@
     }) || null;
   }
 
-  function addInvoiceLog(who, text) {
-    state.invoiceLog.unshift({ who: who, text: text, at: new Date().toISOString() });
+  function addInvoiceLog(who, text, entityId) {
+    state.invoiceLog.unshift({ who: who, text: text, at: new Date().toISOString(), entityId: entityId || null });
     state.invoiceLog = state.invoiceLog.slice(0, 40);
   }
 
@@ -436,10 +493,12 @@
     if (!el) return;
     var digest = getDailyDigest();
     if (digest.items.length === 0) {
-      el.innerHTML = '<div class="digest-title">Today</div><div class="digest-empty">Nothing needs your attention right now. 🎉</div>';
+      el.innerHTML = '<div class="digest-hero"><div class="hero-figure">0</div><div class="hero-caption">Nothing needs your attention right now. 🎉</div></div>';
       return;
     }
-    el.innerHTML = '<div class="digest-title">Today — ' + digest.totalActionable + ' thing(s) worth a look</div>' +
+    el.innerHTML =
+      '<div class="digest-hero"><div class="hero-figure">' + digest.totalActionable + '</div>' +
+        '<div class="hero-caption">thing' + (digest.totalActionable === 1 ? "" : "s") + ' worth a look today, across both trackers</div></div>' +
       digest.items.map(function (item, i) {
         return '<div class="digest-row" data-jump="' + item.jumpTo + '" data-idx="' + i + '">' +
           '<span class="digest-icon">' + item.icon + '</span>' +
@@ -527,9 +586,15 @@
         updateStatus({ id_or_company: a.id, status: sel.value }, "you");
         render();
       });
-      if (lastAppStatuses[a.id] !== undefined && lastAppStatuses[a.id] !== a.status) {
-        var cardEl = document.getElementById("cardwrap-" + a.id);
-        if (cardEl) cardEl.classList.add("flash-update");
+      var cardEl = document.getElementById("cardwrap-" + a.id);
+      if (cardEl) {
+        cardEl.addEventListener("click", function (e) {
+          if (e.target.tagName === "SELECT" || e.target.tagName === "OPTION") return;
+          openJobDetail(a.id);
+        });
+        if (lastAppStatuses[a.id] !== undefined && lastAppStatuses[a.id] !== a.status) {
+          cardEl.classList.add("flash-update");
+        }
       }
       lastAppStatuses[a.id] = a.status;
     });
@@ -568,16 +633,111 @@
       el.innerHTML = '<div class="log-entry">Nothing yet. Log an application by hand, or have an agent do it.</div>';
       return;
     }
-    el.innerHTML = state.log.map(function (entry) {
-      return '<div class="log-entry"><span class="who ' + (entry.who === "agent" ? "agent" : "") + '">' +
-        (entry.who === "agent" ? "Agent" : "You") + '</span> — ' + escapeHtml(entry.text) + '</div>';
-    }).join("");
+    el.innerHTML = state.log.map(renderLogEntry).join("");
   }
 
   function escapeHtml(str) {
     return String(str).replace(/[&<>"']/g, function (c) {
       return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c];
     });
+  }
+
+  function renderLogEntry(entry) {
+    return '<div class="log-entry"><span class="who ' + (entry.who === "agent" ? "agent" : "") + '">' +
+      (entry.who === "agent" ? "Agent" : "You") + '</span> — ' + escapeHtml(entry.text) + '</div>';
+  }
+
+  // ---------- card detail modal (shared by jobs and invoices) ----------
+
+  function closeDetail() {
+    document.getElementById("detailOverlay").style.display = "none";
+  }
+
+  function openJobDetail(id) {
+    var a = findApp(id);
+    if (!a) return;
+    var entity = entityStyle(a.company);
+    var days = daysSince(a.dateApplied);
+    var history = state.log.filter(function (e) { return e.entityId === a.id; });
+
+    var actions = STATUS_OPTIONS.map(function (s) {
+      var isCurrent = s === a.status;
+      return '<button class="' + (isCurrent ? "current" : "") + '" data-set-status="' + s + '" ' + (isCurrent ? "disabled" : "") + '>' + s + '</button>';
+    }).join("");
+
+    var body = document.getElementById("detailModalBody");
+    body.innerHTML =
+      '<div class="detail-header">' +
+        '<div class="detail-avatar" style="background:' + entity.color + ';">' + entity.initial + '</div>' +
+        '<div><div class="detail-name">' + escapeHtml(a.company) + '</div><div class="detail-sub">' + escapeHtml(a.role) + '</div></div>' +
+        '<button class="detail-close" id="detailCloseBtn">✕</button>' +
+      '</div>' +
+      '<div class="detail-facts">' +
+        '<div><div class="fact-label">Applied</div><div class="fact-value">' + escapeHtml(a.dateApplied) + '</div></div>' +
+        '<div><div class="fact-label">Days since</div><div class="fact-value">' + days + 'd</div></div>' +
+        '<div><div class="fact-label">Status</div><div class="fact-value">' + STATUS_ICON[a.status] + ' ' + a.status + '</div></div>' +
+        '<div><div class="fact-label">Responded</div><div class="fact-value">' + (a.respondedAt ? escapeHtml(a.respondedAt) : "—") + '</div></div>' +
+      '</div>' +
+      '<h4>Change status</h4>' +
+      '<div class="detail-actions">' + actions + '</div>' +
+      '<h4>History for ' + escapeHtml(a.company) + '</h4>' +
+      '<div class="detail-history">' +
+        (history.length ? history.map(renderLogEntry).join("") : '<div class="empty">No recorded activity for this application yet.</div>') +
+      '</div>';
+
+    body.querySelectorAll("[data-set-status]").forEach(function (btn) {
+      btn.addEventListener("click", function () {
+        updateStatus({ id_or_company: a.id, status: btn.getAttribute("data-set-status") }, "you");
+        render();
+        openJobDetail(a.id);
+      });
+    });
+    document.getElementById("detailCloseBtn").addEventListener("click", closeDetail);
+    document.getElementById("detailOverlay").style.display = "flex";
+  }
+
+  function openInvoiceDetail(id) {
+    var inv = findInvoice(id);
+    if (!inv) return;
+    var entity = entityStyle(inv.client);
+    var overdue = daysOverdue(inv);
+    var overdueLabel = overdue > 0 ? overdue + "d overdue" : (overdue === 0 ? "due today" : (-overdue) + "d until due");
+    var history = state.invoiceLog.filter(function (e) { return e.entityId === inv.id; });
+
+    var actions = INVOICE_STATUS_OPTIONS.map(function (s) {
+      var isCurrent = s === inv.status;
+      return '<button class="' + (isCurrent ? "current" : "") + '" data-set-status="' + s + '" ' + (isCurrent ? "disabled" : "") + '>' + s.replace("_", " ") + '</button>';
+    }).join("");
+
+    var body = document.getElementById("detailModalBody");
+    body.innerHTML =
+      '<div class="detail-header">' +
+        '<div class="detail-avatar" style="background:' + entity.color + ';">' + entity.initial + '</div>' +
+        '<div><div class="detail-name">' + escapeHtml(inv.client) + '</div><div class="detail-sub">' + escapeHtml(inv.project) + '</div></div>' +
+        '<button class="detail-close" id="detailCloseBtn">✕</button>' +
+      '</div>' +
+      '<div class="detail-facts">' +
+        '<div><div class="fact-label">Amount</div><div class="fact-value">' + money(inv.amount) + '</div></div>' +
+        '<div><div class="fact-label">Due date</div><div class="fact-value">' + escapeHtml(inv.dueDate) + '</div></div>' +
+        '<div><div class="fact-label">Status</div><div class="fact-value">' + INVOICE_STATUS_ICON[inv.status] + ' ' + inv.status.replace("_", " ") + '</div></div>' +
+        '<div><div class="fact-label">' + (overdue > 0 ? "Overdue by" : "Due in") + '</div><div class="fact-value">' + overdueLabel + '</div></div>' +
+      '</div>' +
+      '<h4>Change status</h4>' +
+      '<div class="detail-actions">' + actions + '</div>' +
+      '<h4>History for ' + escapeHtml(inv.client) + '</h4>' +
+      '<div class="detail-history">' +
+        (history.length ? history.map(renderLogEntry).join("") : '<div class="empty">No recorded activity for this invoice yet.</div>') +
+      '</div>';
+
+    body.querySelectorAll("[data-set-status]").forEach(function (btn) {
+      btn.addEventListener("click", function () {
+        updateInvoiceStatus({ id_or_client: inv.id, status: btn.getAttribute("data-set-status") }, "you");
+        renderInvoices();
+        openInvoiceDetail(inv.id);
+      });
+    });
+    document.getElementById("detailCloseBtn").addEventListener("click", closeDetail);
+    document.getElementById("detailOverlay").style.display = "flex";
   }
 
   // ---------- freelance invoices: rendering ----------
@@ -635,8 +795,14 @@
         updateInvoiceStatus({ id_or_client: i.id, status: sel.value }, "you");
         renderInvoices();
       });
+      var cardEl = document.getElementById("invcardwrap-" + i.id);
+      if (cardEl) {
+        cardEl.addEventListener("click", function (e) {
+          if (e.target.tagName === "SELECT" || e.target.tagName === "OPTION") return;
+          openInvoiceDetail(i.id);
+        });
+      }
       if (lastInvoiceStatuses[i.id] !== undefined && lastInvoiceStatuses[i.id] !== i.status) {
-        var cardEl = document.getElementById("invcardwrap-" + i.id);
         if (cardEl) cardEl.classList.add("flash-update");
       }
       lastInvoiceStatuses[i.id] = i.status;
@@ -676,10 +842,7 @@
       el.innerHTML = '<div class="log-entry">Nothing yet. Log an invoice by hand, or have an agent do it.</div>';
       return;
     }
-    el.innerHTML = state.invoiceLog.map(function (entry) {
-      return '<div class="log-entry"><span class="who ' + (entry.who === "agent" ? "agent" : "") + '">' +
-        (entry.who === "agent" ? "Agent" : "You") + '</span> — ' + escapeHtml(entry.text) + '</div>';
-    }).join("");
+    el.innerHTML = state.invoiceLog.map(renderLogEntry).join("");
   }
 
   // ---------- core actions (shared by human UI and WebMCP tools) ----------
@@ -698,7 +861,7 @@
       notes: args.notes || ""
     };
     state.apps.unshift(app);
-    addLog(who || "agent", "logged application to " + app.company + " (" + app.role + ")");
+    addLog(who || "agent", "logged application to " + app.company + " (" + app.role + ")", app.id);
     save();
     return { application: app, message: "Logged " + app.company + " — " + app.role + "." };
   }
@@ -733,7 +896,7 @@
     var isRealResponse = ["interviewing", "offer", "rejected"].indexOf(args.status) !== -1;
     if (isRealResponse && !app.respondedAt) app.respondedAt = todayISO();
     addLog(who || "agent", "moved " + app.company + " from " + prev + " to " + args.status +
-      (args.note ? ' — "' + args.note + '"' : ""));
+      (args.note ? ' — "' + args.note + '"' : ""), app.id);
     save();
     return { application: app, message: app.company + " is now " + args.status + "." };
   }
@@ -749,8 +912,8 @@
     targets.forEach(function (a) {
       a.status = "ghosted";
       names.push(a.company);
+      addLog(who || "agent", a.company + " flagged as ghosted (" + threshold + "+ days silent)", a.id);
     });
-    addLog(who || "agent", "flagged " + targets.length + " application(s) as ghosted: " + names.join(", "));
     save();
     return { flagged: names, count: targets.length, message: "Flagged " + targets.length + " application(s) as ghosted (" + threshold + "+ days silent): " + names.join(", ") + "." };
   }
@@ -834,7 +997,7 @@
       paidAt: null
     };
     state.invoices.unshift(inv);
-    addInvoiceLog(who || "agent", "logged invoice to " + inv.client + " for $" + inv.amount + " (" + inv.project + ")");
+    addInvoiceLog(who || "agent", "logged invoice to " + inv.client + " for $" + inv.amount + " (" + inv.project + ")", inv.id);
     save();
     return { invoice: inv, message: "Logged $" + inv.amount + " invoice to " + inv.client + "." };
   }
@@ -866,7 +1029,7 @@
     inv.status = args.status;
     if (args.status === "paid" && !inv.paidAt) inv.paidAt = todayISO();
     addInvoiceLog(who || "agent", "moved " + inv.client + " invoice from " + prev + " to " + args.status +
-      (args.note ? ' — "' + args.note + '"' : ""));
+      (args.note ? ' — "' + args.note + '"' : ""), inv.id);
     save();
     return { invoice: inv, message: inv.client + " invoice is now " + args.status + "." };
   }
@@ -884,8 +1047,8 @@
       i.status = "ghosted";
       names.push(i.client);
       totalGhosted += i.amount;
+      addInvoiceLog(who || "agent", i.client + " flagged as ghosted (" + threshold + "+ days overdue)", i.id);
     });
-    addInvoiceLog(who || "agent", "flagged " + targets.length + " invoice(s) as ghosted: " + names.join(", "));
     save();
     return {
       flagged: names,
@@ -1287,6 +1450,13 @@
     document.getElementById("invoicesPanel").style.display = "";
     document.getElementById("jobsPanel").style.display = "none";
     document.getElementById("contextLine").textContent = CONTEXT_LINES.invoices;
+  });
+
+  document.getElementById("detailOverlay").addEventListener("click", function (e) {
+    if (e.target.id === "detailOverlay") closeDetail();
+  });
+  document.addEventListener("keydown", function (e) {
+    if (e.key === "Escape") closeDetail();
   });
 
   registerTools();

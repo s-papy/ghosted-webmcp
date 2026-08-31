@@ -49,6 +49,11 @@ follow-ups worth sending, any offer worth leveraging — the kind of "what
 actually needs me today" view that would otherwise take an agent several
 separate calls across two unrelated trackers.
 
+Clicking any card opens a detail view: full facts, one-click status changes,
+and an activity history scoped to that one application or invoice — so an
+agent's action isn't just a line of text updating, it's something you can
+open and inspect afterward.
+
 ## The tools
 
 **Job applications**
