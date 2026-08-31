@@ -61,80 +61,44 @@
   }
   .tab-btn.active { background: var(--link); color: #051225; border-color: var(--link); }
 
-  .compare-row {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    margin-bottom: 16px;
-    flex-wrap: wrap;
+  p.context-line {
+    color: var(--faint);
+    font-size: 0.82rem;
+    margin: 0 0 16px;
   }
-  .compare-card {
-    flex: 1;
-    min-width: 200px;
+  p.context-line a { color: var(--faint); }
+
+  .pipeline-panel {
     background: var(--panel);
     border: 1px solid var(--border);
-    border-radius: 12px;
-    padding: 14px 16px;
+    border-radius: 14px;
+    padding: 18px 20px;
+    margin-bottom: 20px;
   }
-  .compare-card.good { border-color: color-mix(in srgb, var(--good) 40%, var(--border)); }
-  .compare-icon { font-size: 1.4rem; margin-bottom: 4px; }
-  .compare-label { font-weight: 700; font-size: 0.95rem; }
-  .compare-sub { color: var(--muted); font-size: 0.8rem; margin-top: 2px; }
-  .compare-vs { color: var(--faint); font-size: 0.8rem; font-weight: 600; }
-
-  p.stat-pill {
-    display: inline-block;
-    color: var(--warning);
-    font-size: 0.85rem;
-    background: color-mix(in srgb, var(--warning) 10%, var(--panel));
-    border: 1px solid color-mix(in srgb, var(--warning) 35%, transparent);
-    border-radius: 999px;
-    padding: 6px 14px;
-    margin: 0 0 24px;
+  .pipeline-panel h2 {
+    font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.04em;
+    color: var(--faint); margin: 0 0 14px; font-weight: 700;
   }
-  p.stat-pill a { color: var(--warning); }
-
-  .insight {
-    display: flex;
-    align-items: flex-start;
-    gap: 8px;
-    background: color-mix(in srgb, var(--good) 10%, var(--panel));
-    border: 1px solid color-mix(in srgb, var(--good) 35%, transparent);
-    border-radius: 10px;
-    padding: 10px 14px;
-    font-size: 0.84rem;
-    color: var(--muted);
-    margin-bottom: 12px;
-  }
-  .insight b { color: var(--text); }
-
   .summary {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
     gap: 12px;
-    margin-bottom: 20px;
+    margin-bottom: 18px;
   }
   .stat-card {
-    background: var(--panel);
+    background: var(--panel-2);
     border: 1px solid var(--border);
-    border-radius: 12px;
-    padding: 16px 18px;
+    border-radius: 10px;
+    padding: 14px 16px;
   }
-  .stat-card .label { font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.04em; color: var(--faint); margin-bottom: 6px; }
-  .stat-card .value { font-size: 1.6rem; font-weight: 700; font-variant-numeric: proportional-nums; }
+  .stat-card .label { font-size: 0.68rem; text-transform: uppercase; letter-spacing: 0.04em; color: var(--faint); margin-bottom: 6px; }
+  .stat-card .value { font-size: 1.4rem; font-weight: 700; font-variant-numeric: proportional-nums; }
   .stat-card.warn .value { color: var(--warning); }
   .stat-card.good .value { color: var(--good); }
 
   /* Funnel — ordinal sequential ramp per dataviz-skill palette.md
      (steps 300/450/600, dark-surface-safe: never darker than step 600) */
-  .funnel {
-    background: var(--panel);
-    border: 1px solid var(--border);
-    border-radius: 12px;
-    padding: 16px 18px;
-    margin-bottom: 20px;
-  }
-  .funnel .funnel-title { font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.04em; color: var(--faint); margin-bottom: 12px; }
+  .funnel-body { border-top: 1px solid var(--border); padding-top: 16px; }
   .funnel-row { display: flex; align-items: center; gap: 10px; margin-bottom: 8px; }
   .funnel-row:last-child { margin-bottom: 0; }
   .funnel-row .funnel-label { width: 92px; flex-shrink: 0; font-size: 0.82rem; color: var(--muted); }
@@ -255,6 +219,7 @@
   <header>
     <h1>👻 Ghosted</h1>
     <p class="tagline">A tracker that admits when someone's gone silent — a job application, or an unpaid invoice — and an agent that does the checking for you.</p>
+    <p class="context-line" id="contextLine">⚠ 53% of job seekers were ghosted by an employer in the past year, and it now takes ~40 applications to land one interview.</p>
     <div class="tabs">
       <button class="tab-btn active" id="tabJobsBtn">📋 Job applications</button>
       <button class="tab-btn" id="tabInvoicesBtn">💰 Freelance invoices</button>
@@ -264,24 +229,11 @@
   <div class="digest" id="digest"></div>
 
   <div id="jobsPanel">
-    <div class="compare-row">
-      <div class="compare-card">
-        <div class="compare-icon">🙋</div>
-        <div class="compare-label">You check each one by hand</div>
-        <div class="compare-sub">Open every application, do the date math, guess who's ghosting you</div>
-      </div>
-      <div class="compare-vs">vs</div>
-      <div class="compare-card good">
-        <div class="compare-icon">🤖</div>
-        <div class="compare-label">Agent flags every stale one</div>
-        <div class="compare-sub">One tool call — done, with a real answer instead of a guess</div>
-      </div>
-    </div>
-    <p class="stat-pill">⚠ 53% of job seekers were ghosted by an employer in the past year, and it now takes ~40 applications to land one interview.</p>
-
-    <div id="insights"></div>
-    <section class="summary" id="summary"></section>
-    <section class="funnel" id="funnel"></section>
+    <section class="pipeline-panel">
+      <h2>Pipeline</h2>
+      <div class="summary" id="summary"></div>
+      <div class="funnel-body" id="funnel"></div>
+    </section>
 
     <div class="toolbar">
       <input type="text" id="searchInput" placeholder="Search company or role…" />
@@ -307,11 +259,11 @@
   </div>
 
   <div id="invoicesPanel" style="display:none;">
-    <p class="stat-pill">⚠ 85% of freelancers get paid late, and freelancers are owed $6,000 in unpaid invoices on average.</p>
-
-    <div id="invoiceInsights"></div>
-    <section class="summary" id="invoiceSummary"></section>
-    <section class="funnel" id="invoiceFunnel"></section>
+    <section class="pipeline-panel">
+      <h2>Pipeline</h2>
+      <div class="summary" id="invoiceSummary"></div>
+      <div class="funnel-body" id="invoiceFunnel"></div>
+    </section>
 
     <div class="toolbar">
       <input type="text" id="invoiceSearchInput" placeholder="Search client or project…" />
@@ -472,7 +424,6 @@
   // ---------- rendering ----------
 
   function render() {
-    renderInsights();
     renderSummary();
     renderFunnel();
     renderGrid();
@@ -508,40 +459,27 @@
   // per dataviz-skill palette.md ("on dark, go no darker than step 600").
   var FUNNEL_RAMP = ["#6da7ec", "#2a78d6", "#184f95"];
 
-  function renderFunnelChart(containerId, title, stages) {
+  function renderFunnelChart(containerId, stages) {
     var el = document.getElementById(containerId);
     var max = Math.max.apply(null, stages.map(function (s) { return s.count; }).concat([1]));
-    el.innerHTML = '<div class="funnel-title">' + escapeHtml(title) + '</div>' +
-      stages.map(function (s, i) {
-        var pct = Math.round((s.count / max) * 100);
-        var color = FUNNEL_RAMP[i % FUNNEL_RAMP.length];
-        return '<div class="funnel-row">' +
-          '<div class="funnel-label">' + escapeHtml(s.label) + '</div>' +
-          '<div class="funnel-track"><div class="funnel-fill" style="width:' + pct + '%; background:' + color + ';"></div></div>' +
-          '<div class="funnel-value">' + s.count + '</div>' +
-        '</div>';
-      }).join("");
+    el.innerHTML = stages.map(function (s, i) {
+      var pct = Math.round((s.count / max) * 100);
+      var color = FUNNEL_RAMP[i % FUNNEL_RAMP.length];
+      return '<div class="funnel-row">' +
+        '<div class="funnel-label">' + escapeHtml(s.label) + '</div>' +
+        '<div class="funnel-track"><div class="funnel-fill" style="width:' + pct + '%; background:' + color + ';"></div></div>' +
+        '<div class="funnel-value">' + s.count + '</div>' +
+      '</div>';
+    }).join("");
   }
 
   function renderFunnel() {
     var summary = computePipelineSummary();
-    renderFunnelChart("funnel", "Pipeline (current stage)", [
+    renderFunnelChart("funnel", [
       { label: "Applied", count: summary.byStatus.applied },
       { label: "Interviewing", count: summary.byStatus.interviewing },
       { label: "Offer", count: summary.byStatus.offer }
     ]);
-  }
-
-  function renderInsights() {
-    var el = document.getElementById("insights");
-    var opportunities = getLeverageOpportunities();
-    if (opportunities.length === 0) { el.innerHTML = ""; return; }
-    el.innerHTML = opportunities.map(function (o) {
-      var names = o.candidates.map(function (c) { return c.company; }).join(", ");
-      return '<div class="insight">🎯 <span>You have an offer from <b>' + escapeHtml(o.offerFrom) +
-        '</b> — worth telling ' + o.candidates.length + ' other live process' + (o.candidates.length === 1 ? "" : "es") +
-        ' you have a competing offer, to speed things up: <b>' + escapeHtml(names) + '</b></span></div>';
-    }).join("");
   }
 
   function statCard(label, value, cls) {
@@ -647,7 +585,6 @@
   function money(n) { return "$" + n.toFixed(2).replace(/\.00$/, ""); }
 
   function renderInvoices() {
-    renderInvoiceInsights();
     renderInvoiceSummary();
     renderInvoiceFunnel();
     renderInvoiceGrid();
@@ -657,19 +594,10 @@
 
   function renderInvoiceFunnel() {
     var summary = computePaymentSummary();
-    renderFunnelChart("invoiceFunnel", "Invoices (current stage)", [
+    renderFunnelChart("invoiceFunnel", [
       { label: "Sent", count: summary.byStatus.sent },
       { label: "Paid", count: summary.byStatus.paid }
     ]);
-  }
-
-  function renderInvoiceInsights() {
-    var el = document.getElementById("invoiceInsights");
-    var summary = computePaymentSummary();
-    if (summary.ghostedAmount <= 0) { el.innerHTML = ""; return; }
-    el.innerHTML = '<div class="insight">👻 <span><b>' + money(summary.ghostedAmount) +
-      '</b> owed by clients who have gone silent 21+ days past due — ' +
-      'call <code>flag_stale_invoices</code> again any time to re-check.</span></div>';
   }
 
   function renderInvoiceSummary() {
@@ -1032,7 +960,10 @@
 
     var items = [];
     if (staleJobs.length > 0) items.push({ type: "stale_jobs", icon: "👻", count: staleJobs.length, names: staleJobs.map(function (a) { return a.company; }), text: staleJobs.length + " job application(s) look ghosted — call flag_stale_applications", jumpTo: "jobs" });
-    if (staleInvoices.length > 0) items.push({ type: "stale_invoices", icon: "👻", count: staleInvoices.length, names: staleInvoices.map(function (i) { return i.client; }), text: staleInvoices.length + " invoice(s) look ghosted — call flag_stale_invoices", jumpTo: "invoices" });
+    if (staleInvoices.length > 0) {
+      var staleInvoicesAmount = round1(staleInvoices.reduce(function (s, i) { return s + i.amount; }, 0));
+      items.push({ type: "stale_invoices", icon: "👻", count: staleInvoices.length, names: staleInvoices.map(function (i) { return i.client; }), text: staleInvoices.length + " invoice(s) look ghosted (" + money(staleInvoicesAmount) + " owed) — call flag_stale_invoices", jumpTo: "invoices" });
+    }
     if (jobFollowups.length > 0) items.push({ type: "job_followups", icon: "⏰", count: jobFollowups.length, names: jobFollowups.map(function (a) { return a.company; }), text: jobFollowups.length + " application(s) worth a follow-up", jumpTo: "jobs" });
     if (invoiceFollowups.length > 0) items.push({ type: "invoice_followups", icon: "⏰", count: invoiceFollowups.length, names: invoiceFollowups.map(function (i) { return i.client; }), text: invoiceFollowups.length + " invoice(s) worth a payment reminder", jumpTo: "invoices" });
     leverage.forEach(function (o) {
@@ -1338,17 +1269,24 @@
     renderInvoices();
   });
 
+  var CONTEXT_LINES = {
+    jobs: "⚠ 53% of job seekers were ghosted by an employer in the past year, and it now takes ~40 applications to land one interview.",
+    invoices: "⚠ 85% of freelancers get paid late, and freelancers are owed $6,000 in unpaid invoices on average."
+  };
+
   document.getElementById("tabJobsBtn").addEventListener("click", function () {
     document.getElementById("tabJobsBtn").classList.add("active");
     document.getElementById("tabInvoicesBtn").classList.remove("active");
     document.getElementById("jobsPanel").style.display = "";
     document.getElementById("invoicesPanel").style.display = "none";
+    document.getElementById("contextLine").textContent = CONTEXT_LINES.jobs;
   });
   document.getElementById("tabInvoicesBtn").addEventListener("click", function () {
     document.getElementById("tabInvoicesBtn").classList.add("active");
     document.getElementById("tabJobsBtn").classList.remove("active");
     document.getElementById("invoicesPanel").style.display = "";
     document.getElementById("jobsPanel").style.display = "none";
+    document.getElementById("contextLine").textContent = CONTEXT_LINES.invoices;
   });
 
   registerTools();
